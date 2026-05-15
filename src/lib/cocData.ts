@@ -1,104 +1,16 @@
-// CoC Data ID to Name mapping
-// Buildings (1000xxx)
-export const BUILDING_NAMES: Record<number, string> = {
-  1000000: 'Town Hall',
-  1000001: 'Cannon',
-  1000002: 'Archer Tower',
-  1000003: 'Mortar',
-  1000004: 'Air Defense',
-  1000005: 'Wizard Tower',
-  1000006: 'Air Sweeper',
-  1000007: 'Hidden Tesla',
-  1000008: 'X-Bow',
-  1000009: 'Inferno Tower',
-  1000010: 'Gold Mine',
-  1000011: 'Elixir Collector',
-  1000012: 'Dark Elixir Drill',
-  1000013: 'Builder\'s Hut',
-  1000014: 'Gold Storage',
-  1000015: 'Elixir Storage',
-  1000016: 'Dark Elixir Storage',
-  1000017: 'Clan Castle',
-  1000018: 'Laboratory',
-  1000019: 'Spell Factory',
-  1000020: 'Dark Spell Factory',
-  1000021: 'Eagle Artillery',
-  1000022: 'Bomb Tower',
-  1000023: 'Scattershot',
-  1000024: 'Giga Tesla',
-  1000025: 'Giga Inferno',
-  1000026: 'Workshop',
-  1000027: 'Monolith',
-  1000028: 'Multi Mortar',
-  1000029: 'Ricochet Cannon',
-  1000030: 'Barbarian King Altar',
-  1000031: 'Archer Queen Altar',
-  1000032: 'Grand Warden Altar',
-  1000033: 'Wall',
-  1000034: 'Bomb',
-  1000035: 'Spring Trap',
-  1000036: 'Air Bomb',
-  1000037: 'Giant Bomb',
-  1000038: 'Seeking Air Mine',
-  1000039: 'Skeleton Trap',
-  1000040: 'Tornado Trap',
-  1000041: 'Barracks',
-  1000042: 'Dark Barracks',
-  1000043: 'Army Camp',
-  1000044: 'Spell Tower',
-  1000045: 'Minion Prince Altar',
-  1000046: 'Multi Cannon',
-  1000047: 'Flame Flinger',
-  1000048: 'Bat Spell Tower',
-  1000049: 'Lava Launcher',
-  1000050: 'Decorations',
-  1000051: 'Air Bomb',
-  1000052: 'Seeking Air Mine',
-  1000053: 'Inferno Tower',
-  1000054: 'Bomb Tower',
-  1000055: 'Scattershot',
-  1000056: 'Giga Tesla',
-  1000057: 'Eagle Artillery',
-  1000058: 'Monolith',
-  1000059: 'Super Witch Altar',
-  1000060: 'Ricochet Cannon',
-  1000061: 'Multi Mortar',
-  1000062: 'Spell Tower',
-  1000063: 'Lava Launcher',
-  1000064: 'Flame Flinger',
-  1000065: 'Multi Cannon',
-  1000066: 'Bat Spell Tower',
-  1000067: 'Monolith',
-  1000068: 'Scattershot',
-  1000069: 'Eagle Artillery',
-  1000070: 'Ricochet Cannon',
-  1000071: 'Multi Mortar',
-  1000072: 'Bomb Tower',
-  1000073: 'Inferno Tower',
-  1000074: 'Wizard Tower',
-  1000075: 'Air Defense',
-  1000076: 'Mortar',
-  1000077: 'Archer Tower',
-  1000078: 'Cannon',
-  1000079: 'Hidden Tesla',
-  1000080: 'X-Bow',
-  1000081: 'Air Sweeper',
-  1000082: 'Spell Factory',
-  1000083: 'Dark Spell Factory',
-  1000084: 'Workshop',
-  1000085: 'Clan Castle',
-  1000086: 'Laboratory',
-  1000087: 'Army Camp',
-  1000088: 'Barracks',
-  1000089: 'Dark Barracks',
-  1000090: 'Gold Mine',
-  1000091: 'Elixir Collector',
-  1000092: 'Dark Elixir Drill',
-  1000093: 'Gold Storage',
-};
+// CoC Data ID to Name mapping (loaded from external mapping JSON)
+import mapping from './cocMapping.json';
 
-// Heroes (28000xxx)
-export const HERO_NAMES: Record<number, string> = {
+type MappingItem = { name: string; dataId: number };
+
+const ID_TO_NAME: Record<number, string> = (mapping as MappingItem[]).reduce((acc, it) => {
+  acc[it.dataId] = it.name;
+  return acc;
+}, {} as Record<number, string>);
+
+// Some mapping files include placeholder entries like "String" for certain IDs.
+// Provide small fallbacks for hero and pet IDs to avoid showing "String" in the UI.
+const FALLBACK_HERO_NAMES: Record<number, string> = {
   28000000: 'Barbarian King',
   28000001: 'Archer Queen',
   28000002: 'Grand Warden',
@@ -107,10 +19,53 @@ export const HERO_NAMES: Record<number, string> = {
   28000005: 'Battle Copter',
   28000006: 'Minion Prince',
   28000007: 'Apprentice Warden',
+  28000008: 'Dragon Duke',
 };
 
-// Units/Troops (4000xxx)
-export const UNIT_NAMES: Record<number, string> = {
+const FALLBACK_PET_NAMES: Record<number, string> = {
+  73000000: 'L.A.S.S.I',
+  73000001: 'Mighty Yak',
+  73000002: 'Electro Owl',
+  73000003: 'Unicorn',
+  73000004: 'Phoenix',
+  73000005: 'Phoenix Egg',
+  73000006: 'Stork',
+  73000007: 'Poison Lizard',
+  73000008: 'Diggy',
+  73000009: 'Frosty',
+  73000010: 'Spirit Fox',
+  73000011: 'Angry Jelly',
+  73000016: 'Sneezy',
+  73000155: 'Crow',
+};
+
+for (const [id, name] of Object.entries(FALLBACK_HERO_NAMES)) {
+  const numId = Number(id);
+  if (!ID_TO_NAME[numId] || ID_TO_NAME[numId].toLowerCase().startsWith('string')) {
+    ID_TO_NAME[numId] = name;
+  }
+}
+
+for (const [id, name] of Object.entries(FALLBACK_PET_NAMES)) {
+  const numId = Number(id);
+  if (!ID_TO_NAME[numId] || ID_TO_NAME[numId].toLowerCase().startsWith('string')) {
+    ID_TO_NAME[numId] = name;
+  }
+}
+
+export function getBuildingName(dataId: number): string {
+  return ID_TO_NAME[dataId] ?? `Bangunan #${dataId}`;
+}
+
+export function getHeroName(dataId: number): string {
+  const name = ID_TO_NAME[dataId] ?? resolveNameFromMaps(dataId, ID_TO_NAME, FALLBACK_HERO_NAMES);
+  if (!name) return `Hero #${dataId}`;
+  // strip leading "BB " for hero display (builder-base prefix not desired for heroes list)
+  return name.replace(/^BB\s+/i, '');
+}
+
+// Fallback maps for units, spells, equipment when mapping file is missing entries
+const UNIT_FALLBACK: Record<number, string> = {
   4000000: 'Barbarian',
   4000001: 'Archer',
   4000002: 'Giant',
@@ -178,8 +133,7 @@ export const UNIT_NAMES: Record<number, string> = {
   4000123: 'Root Rider',
 };
 
-// Spells (26000xxx)
-export const SPELL_NAMES: Record<number, string> = {
+const SPELL_FALLBACK: Record<number, string> = {
   26000000: 'Lightning Spell',
   26000001: 'Healing Spell',
   26000002: 'Rage Spell',
@@ -205,23 +159,7 @@ export const SPELL_NAMES: Record<number, string> = {
   26000109: 'Revive Spell',
 };
 
-// Pets (73000xxx)
-export const PET_NAMES: Record<number, string> = {
-  73000000: 'L.A.S.S.I',
-  73000001: 'Electro Owl',
-  73000002: 'Mighty Yak',
-  73000003: 'Unicorn',
-  73000004: 'Frosty',
-  73000005: 'Diggy',
-  73000006: 'Poison Lizard',
-  73000007: 'Phoenix',
-  73000008: 'Spirit Fox',
-  73000009: 'Angry Jelly',
-  73000010: 'Minion Prince Pet',
-};
-
-// Equipment (90000xxx)
-export const EQUIPMENT_NAMES: Record<number, string> = {
+const EQUIPMENT_FALLBACK: Record<number, string> = {
   90000000: 'Barbarian Puppet',
   90000001: 'Rage Vial',
   90000002: 'Archer Puppet',
@@ -276,27 +214,48 @@ export const EQUIPMENT_NAMES: Record<number, string> = {
   90000053: 'Henchmen Puppet',
   90000057: 'Giant Gauntlet',
 };
+function resolveNameFromMaps(dataId: number, ...maps: Array<Record<number, string>>): string | undefined {
+  const strId = String(dataId);
+  // direct lookup
+  for (const m of maps) {
+    if (m[dataId]) return m[dataId];
+  }
 
-export function getBuildingName(dataId: number): string {
-  return BUILDING_NAMES[dataId] ?? `Bangunan #${dataId}`;
-}
+  // try suffix/partial matches (handle extra leading/trailing zeros)
+  const allEntries: Array<[string, string]> = [];
+  for (const m of maps) {
+    for (const k of Object.keys(m)) {
+      allEntries.push([k, m[Number(k)]]);
+    }
+  }
 
-export function getHeroName(dataId: number): string {
-  return HERO_NAMES[dataId] ?? `Hero #${dataId}`;
+  for (const [k, v] of allEntries) {
+    if (k.endsWith(strId) || strId.endsWith(k)) return v;
+  }
+
+  return undefined;
 }
 
 export function getUnitName(dataId: number): string {
-  return UNIT_NAMES[dataId] ?? `Pasukan #${dataId}`;
+  return (
+    resolveNameFromMaps(dataId, ID_TO_NAME, UNIT_FALLBACK) ?? `Pasukan #${dataId}`
+  );
 }
 
 export function getSpellName(dataId: number): string {
-  return SPELL_NAMES[dataId] ?? `Mantra #${dataId}`;
+  return (
+    resolveNameFromMaps(dataId, ID_TO_NAME, SPELL_FALLBACK) ?? `Mantra #${dataId}`
+  );
 }
 
 export function getPetName(dataId: number): string {
-  return PET_NAMES[dataId] ?? `Pet #${dataId}`;
+  return (
+    resolveNameFromMaps(dataId, ID_TO_NAME, FALLBACK_PET_NAMES) ?? `Pet #${dataId}`
+  );
 }
 
 export function getEquipmentName(dataId: number): string {
-  return EQUIPMENT_NAMES[dataId] ?? `Equipment #${dataId}`;
+  return (
+    resolveNameFromMaps(dataId, ID_TO_NAME, EQUIPMENT_FALLBACK) ?? `Equipment #${dataId}`
+  );
 }

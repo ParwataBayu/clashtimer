@@ -196,6 +196,10 @@
     border-left: 3px solid var(--status-done);
   }
 
+  .timer-card-urgent {
+    border-left: 3px solid var(--dot-red);
+  }
+
   .icon-btn {
     width: 32px;
     height: 32px;

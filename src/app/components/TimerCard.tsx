@@ -91,7 +91,10 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
   const { days, hours, minutes, seconds } = remaining !== null ? msToComponents(remaining) : { days: 0, hours: 0, minutes: 0, seconds: 0 };
 
   const account = accounts.find((a) => a.id === timer.accountId);
-  const isUrgent = remaining !== null && remaining > 0 && remaining <= 30 * 60 * 1000; // <= 30 minutes
+  const isWarning = remaining !== null && remaining > 0 && remaining <= 30 * 60 * 1000; // <= 30 minutes (yellow)
+  const isAlmostDone = remaining !== null && remaining > 0 && remaining < 60 * 1000; // < 1 minute (red)
+  const chipBg = isAlmostDone ? 'rgba(239,68,68,0.18)' : isWarning ? 'rgba(245,158,11,0.12)' : undefined;
+  const chipColor = isAlmostDone ? '#ef4444' : isWarning ? 'var(--primary)' : undefined;
   
 
   const handleDeleteClick = () => {
@@ -107,11 +110,11 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
 
   return (
     <div
-      className={`card-surface animate-slide-up ${isDone ? 'timer-card-done' : 'timer-card-active'}`}
+      className={`card-surface animate-slide-up ${isDone ? 'timer-card-done' : isAlmostDone ? 'timer-card-urgent' : 'timer-card-active'}`}
       style={{
         padding: '14px 14px 14px 16px',
-        border: isEditing ? '1px solid rgba(245,158,11,0.6)' : (!isDone && isUrgent ? '1px solid rgba(239,68,68,0.25)' : undefined),
-        boxShadow: isEditing ? '0 6px 18px rgba(0,0,0,0.45)' : (!isDone && isUrgent ? '0 0 0 1px rgba(239,68,68,0.06)' : undefined),
+        border: isEditing ? '1px solid rgba(245,158,11,0.6)' : undefined,
+        boxShadow: isEditing ? '0 6px 18px rgba(0,0,0,0.45)' : undefined,
       }}
     >
       <div className="flex items-start gap-2">
@@ -250,15 +253,15 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
             </div>
           ) : (
             <div className="flex items-center gap-1.5 flex-wrap">
-              <ClockIcon className="w-3.5 h-3.5" style={{ color: 'var(--primary)' } as React.CSSProperties} />
+              <ClockIcon className="w-3.5 h-3.5" style={{ color: chipColor ?? 'var(--primary)' } as React.CSSProperties} />
               {days > 0 && (
-                <span className="time-chip" style={{ color: isUrgent ? '#ef4444' : undefined }}>{days}h</span>
+                <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{days}h</span>
               )}
               {(days > 0 || hours > 0) && (
-                <span className="time-chip" style={{ color: isUrgent ? '#ef4444' : undefined }}>{pad(hours)}j</span>
+                <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{pad(hours)}j</span>
               )}
-              <span className="time-chip" style={{ color: isUrgent ? '#ef4444' : undefined }}>{pad(minutes)}m</span>
-              <span className="time-chip" style={{ color: isUrgent ? '#ef4444' : undefined }}>{pad(seconds)}d</span>
+              <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{pad(minutes)}m</span>
+              <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{pad(seconds)}d</span>
             </div>
           )}
         </div>

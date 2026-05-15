@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import '../styles/tailwind.css';
+import RegisterServiceWorker from '@/components/RegisterServiceWorker';
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -31,8 +32,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={geistSans.variable}>
-      <body className={geistSans.className}>{children}
-</body>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#0f1117" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="ClashTimer" />
+        <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png" />
+      </head>
+      <body className={geistSans.className}>
+        <RegisterServiceWorker />
+        {children}
+      </body>
     </html>
   );
 }
