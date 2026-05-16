@@ -115,22 +115,44 @@ export default function AddAkunForm({ onSuccess }: AddAkunFormProps) {
         {/* Color Picker */}
         <div className="mb-4">
           <label className="label-text">Warna Indikator</label>
-          <div className="flex gap-2 flex-wrap">
-            {DOT_COLORS.map((color, idx) => (
-              <button
-                key={`color-opt-${idx}`}
-                type="button"
-                onClick={() => setSelectedColor(color)}
-                className="w-7 h-7 rounded-full transition-all duration-150 flex-shrink-0"
-                style={{
-                  backgroundColor: color,
-                  outline: selectedColor === color ? `2px solid ${color}` : 'none',
-                  outlineOffset: 2,
-                  transform: selectedColor === color ? 'scale(1.2)' : 'scale(1)',
-                }}
-                aria-label={`Pilih warna ${color}`}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            {/* Horizontal indicators (wrap on small screens) */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {DOT_COLORS.map((color, idx) => (
+                <button
+                  key={`color-opt-${idx}`}
+                  type="button"
+                  onClick={() => setSelectedColor(color)}
+                  className="rounded-full transition-all duration-150"
+                  style={{
+                    width: 34,
+                    height: 34,
+                    backgroundColor: color,
+                    border: selectedColor === color ? `3px solid ${color}` : '2px solid rgba(255,255,255,0.04)',
+                    boxSizing: 'border-box',
+                  }}
+                  aria-label={`Pilih warna ${color}`}
+                />
+              ))}
+            </div>
+            {/* Compact picker and shortened hex input (no preview) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 'auto', marginTop: 8 }}>
+              <input
+                aria-label="Pilih warna kustom"
+                type="color"
+                value={selectedColor}
+                onChange={(e) => setSelectedColor(e.target.value)}
+                style={{ width: 34, height: 34, padding: 0, borderRadius: 6, border: '1px solid var(--border)' }}
               />
-            ))}
+              <input
+                aria-label="Hex warna kustom"
+                type="text"
+                value={selectedColor}
+                onChange={(e) => setSelectedColor(e.target.value)}
+                className="input-field"
+                style={{ minWidth: 96, maxWidth: 120 }}
+              />
+            </div>
           </div>
         </div>
 

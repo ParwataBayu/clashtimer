@@ -124,18 +124,21 @@
   }
 
   .filter-pill-active {
-    background-color: var(--primary);
-    color: var(--primary-foreground);
+    /* lighter, more subtle primary so it differs from the darker nav tabs */
+    background-color: rgba(245,158,11,0.12);
+    color: var(--primary);
+    border: 1px solid rgba(245,158,11,0.25);
     border-radius: 9999px;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 700;
     padding: 5px 14px;
     transition: all 150ms ease;
   }
 
   .filter-pill-inactive {
     background-color: var(--card);
-    color: var(--foreground);
+    /* make inactive pills less prominent than active tabs */
+    color: var(--muted-foreground);
     border: 1px solid var(--border);
     border-radius: 9999px;
     font-size: 0.8rem;
@@ -147,6 +150,28 @@
   .filter-pill-inactive:hover {
     border-color: var(--primary);
     color: var(--primary);
+  }
+
+  /* account-pill styles: used for the horizontal account selector (keeps the original bold primary look) */
+  .account-pill-active {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    transition: all 150ms ease;
+  }
+
+  .account-pill-inactive {
+    background-color: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 5px 14px;
+    transition: all 150ms ease;
   }
 
   .section-label {
@@ -302,6 +327,37 @@
     color: var(--muted-foreground);
     cursor: not-allowed;
     transform: none;
+  }
+
+  /* Soft danger button for 'Hapus semua' actions that fits the dark theme */
+  .btn-danger-soft {
+    background-color: rgba(245, 130, 130, 0.12);
+    color: #f07b7b;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 10px 20px;
+    border: 1px solid rgba(240, 158, 158, 0.18);
+    cursor: pointer;
+    transition: background-color 150ms ease, transform 100ms ease;
+  }
+
+  .btn-danger-soft:hover {
+    background-color: rgba(239,68,68,0.18);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.18);
+    box-shadow: none;
+  }
+
+  .btn-danger-soft:active {
+    transform: scale(0.98);
+  }
+
+  .btn-danger-soft-armed {
+    background-color: rgba(239,68,68,0.18);
+    color: #ef4444;
+    border: 1px solid rgba(239,68,68,0.18);
+    box-shadow: none;
   }
 
   .btn-secondary {

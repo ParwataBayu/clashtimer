@@ -69,11 +69,9 @@ export const MOCK_TIMERS: UpgradeTimer[] = [
 ];
 
 export const DOT_COLORS = [
-  '#22c55e',
-  '#3b82f6',
-  '#f59e0b',
-  '#a855f7',
-  '#ef4444',
-  '#06b6d4',
-  '#ec4899',
+  '#FFB6C1',
+  '#8A2BE2',
+  '#00FF7F',
+  '#FF4500',
+  '#1E90FF',
 ];

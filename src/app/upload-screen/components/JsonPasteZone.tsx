@@ -7,7 +7,7 @@ import {
   getUnitName,
   getSpellName,
   getPetName,
-  getEquipmentName,
+  getTrapName,
 } from '@/lib/cocData';
 
 interface JsonPasteZoneProps {
@@ -41,9 +41,10 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
     let idx = 0;
 
     if (upgradeType === 'Bangunan') {
-      // Read buildings and heroes with timer field
+      // Read buildings, heroes and traps with timer field
       const buildings: CocEntry[] = data.buildings ?? [];
       const heroes: CocEntry[] = data.heroes ?? [];
+      const traps: CocEntry[] = data.traps ?? [];
 
       for (const b of buildings) {
         if (!b.timer || b.timer <= 0) continue;
@@ -51,6 +52,19 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
         results.push({
           id: `json-${Date.now()}-${idx++}`,
           name: `${getBuildingName(b.data)} Lv.${b.lvl ?? '?'}`,
+          days,
+          hours,
+          minutes,
+          seconds,
+        });
+      }
+
+      for (const t of traps) {
+        if (!t.timer || t.timer <= 0) continue;
+        const { days, hours, minutes, seconds } = secondsToComponents(t.timer);
+        results.push({
+          id: `json-${Date.now()}-${idx++}`,
+          name: `${getTrapName(t.data)} Lv.${t.lvl ?? '?'}`,
           days,
           hours,
           minutes,
@@ -71,12 +85,12 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
         });
       }
     } else {
-      // Lab mode: read units, spells, pets, equipment with timer field
+      // Lab mode: read units, siege machines, spells, pets with timer field
       const units: CocEntry[] = data.units ?? [];
       const units2: CocEntry[] = data.units2 ?? [];
+      const siegeMachines: CocEntry[] = data.siege_machines ?? [];
       const spells: CocEntry[] = data.spells ?? [];
       const pets: CocEntry[] = data.pets ?? [];
-      const equipment: CocEntry[] = data.equipment ?? [];
 
       for (const u of [...units, ...units2]) {
         if (!u.timer || u.timer <= 0) continue;
@@ -104,12 +118,12 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
         });
       }
 
-      for (const p of pets) {
-        if (!p.timer || p.timer <= 0) continue;
-        const { days, hours, minutes, seconds } = secondsToComponents(p.timer);
+      for (const sm of siegeMachines) {
+        if (!sm.timer || sm.timer <= 0) continue;
+        const { days, hours, minutes, seconds } = secondsToComponents(sm.timer);
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getPetName(p.data)} Lv.${p.lvl ?? '?'}`,
+          name: `${getUnitName(sm.data)} Lv.${sm.lvl ?? '?'}`,
           days,
           hours,
           minutes,
@@ -117,12 +131,12 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
         });
       }
 
-      for (const e of equipment) {
-        if (!e.timer || e.timer <= 0) continue;
-        const { days, hours, minutes, seconds } = secondsToComponents(e.timer);
+      for (const p of pets) {
+        if (!p.timer || p.timer <= 0) continue;
+        const { days, hours, minutes, seconds } = secondsToComponents(p.timer);
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getEquipmentName(e.data)} Lv.${e.lvl ?? '?'}`,
+          name: `${getPetName(p.data)} Lv.${p.lvl ?? '?'}`,
           days,
           hours,
           minutes,
@@ -150,8 +164,9 @@ export default function JsonPasteZone({ onParsed, upgradeType, disabled }: JsonP
     const items = parseCocJson(jsonText, upgradeType);
     if (items.length === 0) {
       setError(
-        upgradeType === 'Bangunan' ?'Tidak ada upgrade aktif ditemukan. Pastikan ada bangunan/hero dengan field "timer" di JSON.'
-          : 'Tidak ada upgrade aktif ditemukan. Pastikan ada unit/mantra/pet/equipment dengan field "timer" di JSON.'
+        upgradeType === 'Bangunan'
+          ? 'Tidak ada upgrade aktif ditemukan. Pastikan ada bangunan/hero dengan field "timer" di JSON.'
+          : 'Tidak ada upgrade aktif ditemukan. Pastikan ada pasukan/mantra/siege_machines/pet dengan field "timer" di JSON.'
       );
       return;
     }
@@ -234,8 +249,9 @@ export default function JsonPasteZone({ onParsed, upgradeType, disabled }: JsonP
       )}
 
       <p className="helper-text mb-3">
-        {upgradeType === 'Bangunan' ?'Mode Bangunan: membaca buildings & heroes yang sedang diupgrade (field "timer" &gt; 0)'
-          : 'Mode Lab: membaca units, spells, pets & equipment yang sedang diupgrade (field "timer" &gt; 0)'}
+        {upgradeType === 'Bangunan'
+          ? 'Mode Bangunan: membaca buildings & heroes yang sedang diupgrade (field "timer" > 0)'
+          : 'Mode Lab: membaca pasukan, siege_machines, mantra, dan pet yang sedang diupgrade (field "timer" > 0)'}
       </p>
 
       <button

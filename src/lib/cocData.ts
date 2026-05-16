@@ -214,6 +214,24 @@ const EQUIPMENT_FALLBACK: Record<number, string> = {
   90000053: 'Henchmen Puppet',
   90000057: 'Giant Gauntlet',
 };
+// Fallback for trap IDs (12000000+)
+const TRAP_FALLBACK: Record<number, string> = {
+  12000000: 'Bomb',
+  12000001: 'Spring Trap',
+  12000002: 'Giant Bomb',
+  12000005: 'Air Bomb',
+  12000006: 'Seeking Air Mine',
+  12000008: 'Skeleton Trap',
+  12000010: 'Small Air Bomb',
+  12000011: 'Large Air Bomb',
+  12000013: 'Hidden Tesla Trap',
+  12000014: 'Multi Trap',
+  12000016: 'Tornado Trap',
+};
+
+export function getTrapName(dataId: number): string {
+  return resolveNameFromMaps(dataId, ID_TO_NAME, TRAP_FALLBACK) ?? `Trap #${dataId}`;
+}
 function resolveNameFromMaps(dataId: number, ...maps: Array<Record<number, string>>): string | undefined {
   const strId = String(dataId);
   // direct lookup

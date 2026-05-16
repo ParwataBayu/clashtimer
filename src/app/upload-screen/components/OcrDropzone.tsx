@@ -151,14 +151,8 @@ export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDrop
               });
             }
           } else {
-            results.push({
-              id: `ocr-${Date.now()}-${i}`,
-              name: `Screenshot ${i + 1} (tidak ada timer)`,
-              days: 0,
-              hours: 0,
-              minutes: 0,
-              seconds: 0,
-            });
+            // do not push placeholder entries when screenshot contains no upgrade timers
+            // this keeps the UI from showing 'pasted image' items with zero time
           }
         } catch {
           results.push({

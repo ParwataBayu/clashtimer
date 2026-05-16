@@ -30,11 +30,13 @@ export default function AkunListItem({ account, onDelete, isDeleting }: AkunList
         transition: 'opacity 300ms ease, transform 300ms ease',
       }}
     >
-      {/* Colored Dot */}
-      <div
-        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-        style={{ backgroundColor: account.dotColor }}
-      />
+      {/* Colored Dot (larger column) */}
+      <div style={{ minWidth: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div
+          className="rounded-full flex-shrink-0"
+          style={{ width: 18, height: 18, backgroundColor: account.dotColor, border: '2px solid rgba(255,255,255,0.08)' }}
+        />
+      </div>
 
       {/* Name + TH */}
       <div className="flex-1 flex items-center gap-2 min-w-0">

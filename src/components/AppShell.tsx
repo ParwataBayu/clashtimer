@@ -20,6 +20,8 @@ interface StoreContextType {
   markTimerDone: (id: string) => void;
   updateTimer: (id: string, patch: Partial<UpgradeTimer>) => void;
   removeAllDone: () => void;
+  removeAllForAccount: (id: string) => void;
+  removeActiveForAccount: (id: string) => void;
 }
 
 export const StoreContext = createContext<StoreContextType>({
@@ -36,6 +38,8 @@ export const StoreContext = createContext<StoreContextType>({
   markTimerDone: () => {},
   updateTimer: () => {},
   removeAllDone: () => {},
+  removeAllForAccount: () => {},
+  removeActiveForAccount: () => {},
 });
 
 export function useStore() {

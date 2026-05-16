@@ -305,6 +305,39 @@ export function useCOCStore() {
     }
   }, [timers, persistTimers]);
 
+  const removeAllForAccount = useCallback((accountId: string) => {
+    const next = timers.filter((t) => t.accountId !== accountId);
+    persistTimers(next);
+
+    if (hasSupabaseConfig()) {
+      (async () => {
+        try {
+          await supabase.from('timers').delete().eq('accountId', accountId);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('Supabase delete(timers) by account exception:', e);
+        }
+      })();
+    }
+  }, [timers, persistTimers]);
+
+  const removeActiveForAccount = useCallback((accountId: string) => {
+    const next = timers.filter((t) => !(t.accountId === accountId && t.status !== 'done' && t.finishAt > Date.now()));
+    persistTimers(next);
+
+    if (hasSupabaseConfig()) {
+      (async () => {
+        try {
+          // delete where accountId = accountId AND status != 'done' AND finishAt > now
+          await supabase.from('timers').delete().eq('accountId', accountId).neq('status', 'done');
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error('Supabase delete(active timers) by account exception:', e);
+        }
+      })();
+    }
+  }, [timers, persistTimers]);
+
   // schedule timers on hydration
   useEffect(() => {
     if (!hydrated) return;
@@ -331,5 +364,7 @@ export function useCOCStore() {
     markTimerDone,
     updateTimer,
     removeAllDone,
+    removeAllForAccount,
+    removeActiveForAccount,
   };
 }

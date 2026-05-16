@@ -1,14 +1,19 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '@/components/AppShell';
 import TimerCard from './TimerCard';
 import type { UpgradeTimer } from '@/lib/types';
  
 
 export default function TimerContent() {
-  const { accounts, timers, removeTimer, markTimerDone, removeAllDone } = useStore();
+  const { accounts, timers, removeTimer, markTimerDone, removeAllDone, removeAllForAccount, removeActiveForAccount } = useStore();
   const [activeFilter, setActiveFilter] = useState<string>('semua');
+  const [accountViewType, setAccountViewType] = useState<'semua' | 'Bangunan' | 'Lab'>('semua');
   const [, forceUpdate] = useState(0);
+  const [armedActive, setArmedActive] = useState(false);
+  const [armedDone, setArmedDone] = useState(false);
+  const armedActiveTimeout = useRef<number | null>(null);
+  const armedDoneTimeout = useRef<number | null>(null);
 
   // Countdown tick every second
   useEffect(() => {
@@ -18,15 +23,26 @@ export default function TimerContent() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (armedActiveTimeout.current) window.clearTimeout(armedActiveTimeout.current);
+      if (armedDoneTimeout.current) window.clearTimeout(armedDoneTimeout.current);
+    };
+  }, []);
+
   const filterPills = [
     { id: 'semua', label: 'Semua' },
     ...accounts.map((a) => ({ id: a.id, label: a.name })),
   ];
 
-  const filteredTimers: UpgradeTimer[] =
+  let filteredTimers: UpgradeTimer[] =
     activeFilter === 'semua'
       ? timers
       : timers.filter((t) => t.accountId === activeFilter);
+
+  if (activeFilter !== 'semua' && accountViewType !== 'semua') {
+    filteredTimers = filteredTimers.filter((t) => t.type === accountViewType);
+  }
 
   const now = Date.now();
 
@@ -89,7 +105,7 @@ export default function TimerContent() {
           <button
             key={`pill-${pill.id}`}
             onClick={() => setActiveFilter(pill.id)}
-            className={activeFilter === pill.id ? 'filter-pill-active' : 'filter-pill-inactive'}
+            className={activeFilter === pill.id ? 'account-pill-active' : 'account-pill-inactive'}
             style={{ whiteSpace: 'nowrap' }}
           >
             {pill.label}
@@ -97,12 +113,56 @@ export default function TimerContent() {
         ))}
       </div>
 
+      {/* Account-specific view toggle */}
+      {activeFilter !== 'semua' && (
+        <div className="flex items-center justify-between mt-3 mb-4">
+          <div className="flex items-center gap-2" style={{ marginLeft: 6 }}>
+            {([
+              { id: 'semua', label: 'Semua' },
+              { id: 'Bangunan', label: 'Bangunan' },
+              { id: 'Lab', label: 'Lab' },
+            ] as { id: string; label: string }[]).map((opt) => (
+              <button
+                key={`accview-${opt.id}`}
+                onClick={() => setAccountViewType(opt.id as any)}
+                className={accountViewType === (opt.id as any) ? 'filter-pill-active' : 'filter-pill-inactive'}
+                style={{ padding: '6px 10px', fontSize: '0.75rem', borderRadius: 8 }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Active Timers */}
       {activeTimers.length > 0 && (
         <div className="mb-5">
-          <p className="section-label mb-2">
-            Sedang Upgrade ({activeTimers.length})
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="section-label">Sedang Upgrade ({activeTimers.length})</p>
+            {activeFilter !== 'semua' && (
+              <button
+                className={`text-xs btn-danger-soft px-3 py-1.5 rounded-lg ${armedActive ? 'btn-danger-soft-armed' : ''}`}
+                onClick={() => {
+                  if (!armedActive) {
+                    setArmedActive(true);
+                    if (armedActiveTimeout.current) window.clearTimeout(armedActiveTimeout.current);
+                    armedActiveTimeout.current = window.setTimeout(() => setArmedActive(false), 5000);
+                    return;
+                  }
+                  removeActiveForAccount(activeFilter);
+                  setArmedActive(false);
+                  if (armedActiveTimeout.current) {
+                    window.clearTimeout(armedActiveTimeout.current);
+                    armedActiveTimeout.current = null;
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                <span>Hapus semua</span>
+              </button>
+            )}
+          </div>
           <div className="flex flex-col gap-2">
             {activeTimers.map((timer) => (
               <TimerCard
@@ -123,10 +183,20 @@ export default function TimerContent() {
               Selesai ({doneTimers.length})
             </p>
             <button
-              className="text-xs btn-primary px-3 py-1.5 rounded-lg"
+              className={`text-xs btn-danger-soft px-3 py-1.5 rounded-lg ${armedDone ? 'btn-danger-soft-armed' : ''}`}
               onClick={() => {
-                // remove all done timers immediately
+                if (!armedDone) {
+                  setArmedDone(true);
+                  if (armedDoneTimeout.current) window.clearTimeout(armedDoneTimeout.current);
+                  armedDoneTimeout.current = window.setTimeout(() => setArmedDone(false), 5000);
+                  return;
+                }
                 removeAllDone();
+                setArmedDone(false);
+                if (armedDoneTimeout.current) {
+                  window.clearTimeout(armedDoneTimeout.current);
+                  armedDoneTimeout.current = null;
+                }
               }}
             >
               Hapus semua
