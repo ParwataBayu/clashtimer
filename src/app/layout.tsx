@@ -35,10 +35,14 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0f1117" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="icon" href="/assets/images/icon-192.png" sizes="192x192" />
+        <link rel="icon" href="/assets/images/icon-512.png" sizes="512x512" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="ClashTimer" />
-        <link rel="apple-touch-icon" href="/assets/images/app_logo.png" />
+        <link rel="apple-touch-icon" href="/assets/images/icon-192.png" />
+        <meta name="msapplication-TileImage" content="/assets/images/icon-512.png" />
       </head>
       <body className={geistSans.className}>
         <RegisterServiceWorker />

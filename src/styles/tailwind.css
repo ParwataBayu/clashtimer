@@ -400,6 +400,18 @@
     scrollbar-width: none;
   }
 
+  /* Hide scrollbars globally but allow scrolling via mouse/trackpad */
+  html, body, * {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+    width: 0px;
+    height: 0px;
+    background: transparent;
+  }
+
   .animate-fade-in {
     animation: fadeIn 200ms ease forwards;
   }
