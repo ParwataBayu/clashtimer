@@ -7,7 +7,7 @@ import { isPetName } from '@/lib/cocData';
  
 
 export default function TimerContent() {
-  const { accounts, timers, removeTimer, markTimerDone, removeAllDone, removeAllForAccount, removeActiveForAccount, updateTimersBulk } = useStore();
+  const { accounts, timers, removeTimer, markTimerDone, removeAllDone, removeAllForAccount, removeActiveForAccount, updateTimersBulk, updateAccount } = useStore();
   const [activeFilter, setActiveFilter] = useState<string>('semua');
   const [accountViewType, setAccountViewType] = useState<'semua' | 'Bangunan' | 'Lab'>('semua');
   const [, forceUpdate] = useState(0);
@@ -169,7 +169,7 @@ export default function TimerContent() {
       {activeTimers.length > 0 && (
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
-            <p className="section-label">Sedang Upgrade ({activeTimers.length})</p>
+            <p className="section-label">Upgrade ({activeTimers.length})</p>
             {activeFilter !== 'semua' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -211,6 +211,8 @@ export default function TimerContent() {
                           });
                           if (updates.length > 0) updateTimersBulk(updates);
                           setNotification({ message: `Ramuan Bangunan diterapkan pada ${updated} timer.`, kind: 'success', details });
+                          // consume ramuan from account (use all configured ramuan)
+                          updateAccount(activeFilter, { ramuanB: 0 });
                           window.setTimeout(() => setNotification(null), 8000);
                       }}
                       className="p-2 rounded-md"
@@ -263,6 +265,8 @@ export default function TimerContent() {
                         });
                         if (updates.length > 0) updateTimersBulk(updates);
                         setNotification({ message: `Ramuan Lab diterapkan pada ${updated} timer.`, kind: 'success', details: detailsL });
+                        // consume ramuan from account (use all configured ramuan)
+                        updateAccount(activeFilter, { ramuanL: 0 });
                         window.setTimeout(() => setNotification(null), 8000);
                       }}
                       className="p-2 rounded-md"
@@ -295,7 +299,7 @@ export default function TimerContent() {
                     }}
                     style={{ display: 'flex', alignItems: 'center', gap: 8 }}
                   >
-                    <span>Hapus semua</span>
+                    <span>Hapus</span>
                   </button>
                 </div>
             )}
@@ -336,7 +340,7 @@ export default function TimerContent() {
                 }
               }}
             >
-              Hapus semua
+              Hapus
             </button>
           </div>
           <div className="flex flex-col gap-2">

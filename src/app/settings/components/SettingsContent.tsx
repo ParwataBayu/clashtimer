@@ -139,11 +139,11 @@ export default function SettingsContent() {
 
               <div className="flex items-center gap-4">
                 <div>
-                  <input type="number" min={1} className="input-field" style={{ width: 72, height: 40 }} value={builder} onChange={(e) => setBuilder(Math.max(1, Number(e.target.value) || 1))} />
+                  <input type="number" min={1} className="input-field" style={{ width: 56, height: 40 }} value={builder} onChange={(e) => setBuilder(Math.max(1, Number(e.target.value) || 1))} />
                 </div>
 
                 <div>
-                  <input type="number" min={2} className="input-field" style={{ width: 72, height: 40 }} value={lab} onChange={(e) => setLab(Math.max(2, Number(e.target.value) || 2))} />
+                  <input type="number" min={2} className="input-field" style={{ width: 56, height: 40 }} value={lab} onChange={(e) => setLab(Math.max(2, Number(e.target.value) || 2))} />
                 </div>
 
                 <div>
@@ -228,11 +228,11 @@ export default function SettingsContent() {
 
               <div className="flex items-center gap-4">
                 <div>
-                  <input type="number" min={0} className="input-field" style={{ width: 72, height: 40 }} value={ramB} onChange={(e) => setRamB(Math.max(0, Number(e.target.value) || 0))} />
+                  <input type="number" min={0} className="input-field" style={{ width: 56, height: 40 }} value={ramB} onChange={(e) => setRamB(Math.max(0, Number(e.target.value) || 0))} />
                 </div>
 
                 <div>
-                  <input type="number" min={0} className="input-field" style={{ width: 72, height: 40 }} value={ramL} onChange={(e) => setRamL(Math.max(0, Number(e.target.value) || 0))} />
+                  <input type="number" min={0} className="input-field" style={{ width: 56, height: 40 }} value={ramL} onChange={(e) => setRamL(Math.max(0, Number(e.target.value) || 0))} />
                 </div>
 
                 <div>
