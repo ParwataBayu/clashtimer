@@ -128,7 +128,7 @@ const UNIT_FALLBACK: Record<number, string> = {
   4000082: 'Thrower',
   4000087: 'Siege Barracks',
   4000091: 'Log Launcher',
-  4000095: 'Druid',
+  4000095: 'Electro Titan',
   4000097: 'Minion',
   4000123: 'Root Rider',
 };

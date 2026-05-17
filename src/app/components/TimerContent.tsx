@@ -87,6 +87,9 @@ export default function TimerContent() {
     .filter((t) => t.status === 'done' || t.finishAt <= now)
     .sort((a, b) => a.finishAt - b.finishAt);
 
+  // When viewing all timers, combine active + done and sort by finish time (soonest first)
+  const combinedTimers = filteredTimers.slice().sort((a, b) => a.finishAt - b.finishAt);
+
   const handleDelete = useCallback(
     (id: string) => {
       removeTimer(id);
@@ -165,12 +168,26 @@ export default function TimerContent() {
         </>
       )}
 
-      {/* Active Timers */}
-      {activeTimers.length > 0 && (
-        <div className="mb-5">
-          <div className="flex items-center justify-between mb-2">
-            <p className="section-label">Upgrade ({activeTimers.length})</p>
-            {activeFilter !== 'semua' && (
+      {/* Active / Combined Timers */}
+      {activeFilter === 'semua' ? (
+        combinedTimers.length > 0 && (
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="section-label">Semua ({combinedTimers.length})</p>
+            </div>
+            <div className="flex flex-col gap-2">
+              {combinedTimers.map((timer) => (
+                <TimerCard key={`timer-all-${timer.id}`} timer={timer} onDelete={handleDelete} />
+              ))}
+            </div>
+          </div>
+        )
+      ) : (
+        activeTimers.length > 0 && (
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="section-label">Upgrade ({activeTimers.length})</p>
+              {activeFilter !== 'semua' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <button
@@ -303,21 +320,22 @@ export default function TimerContent() {
                   </button>
                 </div>
             )}
+            </div>
+            <div className="flex flex-col gap-2">
+              {activeTimers.map((timer) => (
+                <TimerCard
+                  key={`timer-active-${timer.id}`}
+                  timer={timer}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            {activeTimers.map((timer) => (
-              <TimerCard
-                key={`timer-active-${timer.id}`}
-                timer={timer}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        </div>
+        )
       )}
 
-      {/* Done Timers */}
-      {doneTimers.length > 0 && (
+      {/* Done Timers (account-specific only) */}
+      {activeFilter !== 'semua' && doneTimers.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
             <p className="section-label">
