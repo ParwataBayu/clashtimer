@@ -87,8 +87,17 @@ export default function TimerContent() {
     .filter((t) => t.status === 'done' || t.finishAt <= now)
     .sort((a, b) => a.finishAt - b.finishAt);
 
-  // When viewing all timers, combine active + done and sort by finish time (soonest first)
-  const combinedTimers = filteredTimers.slice().sort((a, b) => a.finishAt - b.finishAt);
+  // When viewing all timers, show combined Upgrade (active) first (soonest finish),
+  // then Selesai (done) moved to the bottom.
+  const combinedActiveTimers = filteredTimers
+    .filter((t) => t.status !== 'done' && t.finishAt > now)
+    .slice()
+    .sort((a, b) => a.finishAt - b.finishAt);
+
+  const combinedDoneTimers = filteredTimers
+    .filter((t) => t.status === 'done' || t.finishAt <= now)
+    .slice()
+    .sort((a, b) => a.finishAt - b.finishAt);
 
   const handleDelete = useCallback(
     (id: string) => {
@@ -170,18 +179,52 @@ export default function TimerContent() {
 
       {/* Active / Combined Timers */}
       {activeFilter === 'semua' ? (
-        combinedTimers.length > 0 && (
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="section-label">Semua ({combinedTimers.length})</p>
+        <>
+          {combinedActiveTimers.length > 0 && (
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="section-label">Upgrade ({combinedActiveTimers.length})</p>
+              </div>
+              <div className="flex flex-col gap-2">
+                {combinedActiveTimers.map((timer) => (
+                  <TimerCard key={`timer-all-active-${timer.id}`} timer={timer} onDelete={handleDelete} />
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col gap-2">
-              {combinedTimers.map((timer) => (
-                <TimerCard key={`timer-all-${timer.id}`} timer={timer} onDelete={handleDelete} />
-              ))}
+          )}
+
+          {combinedDoneTimers.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="section-label">Selesai ({combinedDoneTimers.length})</p>
+                <button
+                  className={`text-xs btn-danger-soft px-3 py-1.5 rounded-lg ${armedDone ? 'btn-danger-soft-armed' : ''}`}
+                  onClick={() => {
+                    if (!armedDone) {
+                      setArmedDone(true);
+                      if (armedDoneTimeout.current) window.clearTimeout(armedDoneTimeout.current);
+                      armedDoneTimeout.current = window.setTimeout(() => setArmedDone(false), 5000);
+                      return;
+                    }
+                    removeAllDone();
+                    setArmedDone(false);
+                    if (armedDoneTimeout.current) {
+                      window.clearTimeout(armedDoneTimeout.current);
+                      armedDoneTimeout.current = null;
+                    }
+                  }}
+                >
+                  Hapus
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {combinedDoneTimers.map((timer) => (
+                  <TimerCard key={`timer-all-done-${timer.id}`} timer={timer} onDelete={handleDelete} />
+                ))}
+              </div>
             </div>
-          </div>
-        )
+          )}
+        </>
       ) : (
         activeTimers.length > 0 && (
           <div className="mb-5">
