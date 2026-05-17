@@ -6,9 +6,9 @@ const h = 3_600_000;
 const d = 86_400_000;
 
 export const MOCK_ACCOUNTS: Account[] = [
-  { id: 'acc-001', name: 'Bayu Invaders', thLevel: 13, dotColor: '#22c55e' },
-  { id: 'acc-002', name: 'Par-Ba Invaders', thLevel: 14, dotColor: '#3b82f6' },
-  { id: 'acc-003', name: 'Invaders', thLevel: 12, dotColor: '#f59e0b' },
+  { id: 'acc-001', name: 'Bayu Invaders', thLevel: 13, dotColor: '#22c55e', buildermultiplier: 1, labmultiplier: 2, ramuanB: 0, ramuanL: 0 },
+  { id: 'acc-002', name: 'Par-Ba Invaders', thLevel: 14, dotColor: '#3b82f6', buildermultiplier: 1, labmultiplier: 2, ramuanB: 0, ramuanL: 0 },
+  { id: 'acc-003', name: 'Invaders', thLevel: 12, dotColor: '#f59e0b', buildermultiplier: 1, labmultiplier: 2, ramuanB: 0, ramuanL: 0 },
 ];
 
 export const MOCK_TIMERS: UpgradeTimer[] = [

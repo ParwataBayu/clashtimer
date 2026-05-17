@@ -3,15 +3,40 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useStore } from '@/components/AppShell';
 import TimerCard from './TimerCard';
 import type { UpgradeTimer } from '@/lib/types';
+import { isPetName } from '@/lib/cocData';
  
 
 export default function TimerContent() {
-  const { accounts, timers, removeTimer, markTimerDone, removeAllDone, removeAllForAccount, removeActiveForAccount } = useStore();
+  const { accounts, timers, removeTimer, markTimerDone, removeAllDone, removeAllForAccount, removeActiveForAccount, updateTimersBulk } = useStore();
   const [activeFilter, setActiveFilter] = useState<string>('semua');
   const [accountViewType, setAccountViewType] = useState<'semua' | 'Bangunan' | 'Lab'>('semua');
   const [, forceUpdate] = useState(0);
   const [armedActive, setArmedActive] = useState(false);
   const [armedDone, setArmedDone] = useState(false);
+  const [confirmRamuanB, setConfirmRamuanB] = useState(false);
+  const [confirmRamuanL, setConfirmRamuanL] = useState(false);
+  const confirmRamuanBTimeout = useRef<number | null>(null);
+  const confirmRamuanLTimeout = useRef<number | null>(null);
+  const [hoveredIcon, setHoveredIcon] = useState<'B' | 'L' | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    kind?: 'info' | 'success' | 'error';
+    details?: Array<{ id: string; name: string; reducedMs: number; before: number; after: number }>;
+  } | null>(null);
+
+  function formatDuration(ms: number) {
+    if (ms <= 0) return '0s';
+    const s = Math.floor(ms / 1000);
+    const d = Math.floor(s / 86400);
+    const h = Math.floor((s % 86400) / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const parts: string[] = [];
+    if (d) parts.push(`${d}d`);
+    if (h) parts.push(`${h}h`);
+    if (m) parts.push(`${m}m`);
+    if (!parts.length) parts.push(`${s % 60}s`);
+    return parts.join(' ');
+  }
   const armedActiveTimeout = useRef<number | null>(null);
   const armedDoneTimeout = useRef<number | null>(null);
 
@@ -33,6 +58,12 @@ export default function TimerContent() {
   const filterPills = [
     { id: 'semua', label: 'Semua' },
     ...accounts.map((a) => ({ id: a.id, label: a.name })),
+  ];
+
+  const accountViewOptions: { id: 'semua' | 'Bangunan' | 'Lab'; label: string }[] = [
+    { id: 'semua', label: 'Semua' },
+    { id: 'Bangunan', label: 'Bangunan' },
+    { id: 'Lab', label: 'Lab' },
   ];
 
   let filteredTimers: UpgradeTimer[] =
@@ -96,7 +127,7 @@ export default function TimerContent() {
 
   return (
     <div className="animate-fade-in">
-      {/* Filter Pills */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div
         className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 -mx-1 px-1"
         style={{ position: 'sticky', top: 'var(--header-height)', zIndex: 30, background: 'var(--background)', paddingTop: 6, marginTop: 4 }}
@@ -115,17 +146,15 @@ export default function TimerContent() {
 
       {/* Account-specific view toggle */}
       {activeFilter !== 'semua' && (
+        <>
+          
         <div className="flex items-center justify-between mt-3 mb-4">
           <div className="flex items-center gap-2" style={{ marginLeft: 6 }}>
-            {([
-              { id: 'semua', label: 'Semua' },
-              { id: 'Bangunan', label: 'Bangunan' },
-              { id: 'Lab', label: 'Lab' },
-            ] as { id: string; label: string }[]).map((opt) => (
+            {accountViewOptions.map((opt) => (
               <button
                 key={`accview-${opt.id}`}
-                onClick={() => setAccountViewType(opt.id as any)}
-                className={accountViewType === (opt.id as any) ? 'filter-pill-active' : 'filter-pill-inactive'}
+                onClick={() => setAccountViewType(opt.id)}
+                className={accountViewType === opt.id ? 'filter-pill-active' : 'filter-pill-inactive'}
                 style={{ padding: '6px 10px', fontSize: '0.75rem', borderRadius: 8 }}
               >
                 {opt.label}
@@ -133,6 +162,7 @@ export default function TimerContent() {
             ))}
           </div>
         </div>
+        </>
       )}
 
       {/* Active Timers */}
@@ -141,26 +171,133 @@ export default function TimerContent() {
           <div className="flex items-center justify-between mb-2">
             <p className="section-label">Sedang Upgrade ({activeTimers.length})</p>
             {activeFilter !== 'semua' && (
-              <button
-                className={`text-xs btn-danger-soft px-3 py-1.5 rounded-lg ${armedActive ? 'btn-danger-soft-armed' : ''}`}
-                onClick={() => {
-                  if (!armedActive) {
-                    setArmedActive(true);
-                    if (armedActiveTimeout.current) window.clearTimeout(armedActiveTimeout.current);
-                    armedActiveTimeout.current = window.setTimeout(() => setArmedActive(false), 5000);
-                    return;
-                  }
-                  removeActiveForAccount(activeFilter);
-                  setArmedActive(false);
-                  if (armedActiveTimeout.current) {
-                    window.clearTimeout(armedActiveTimeout.current);
-                    armedActiveTimeout.current = null;
-                  }
-                }}
-                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-              >
-                <span>Hapus semua</span>
-              </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      title="Gunakan Ramuan Bangunan"
+                        onMouseEnter={() => setHoveredIcon('B')}
+                        onMouseLeave={() => setHoveredIcon(null)}
+                        onClick={() => {
+                        const acc = accounts.find((a) => a.id === activeFilter);
+                        const count = acc?.ramuanB ?? 0;
+                        if (!count || count <= 0) {
+                            setNotification({ message: 'Tidak ada Ramuan Bangunan di pengaturan akun ini.', kind: 'error' });
+                            window.setTimeout(() => setNotification(null), 8000);
+                          return;
+                        }
+                        if (!confirmRamuanB) {
+                          setConfirmRamuanB(true);
+                            if (confirmRamuanBTimeout.current) window.clearTimeout(confirmRamuanBTimeout.current);
+                            confirmRamuanBTimeout.current = window.setTimeout(() => setConfirmRamuanB(false), 8000);
+                            setNotification({ message: `Klik lagi untuk konfirmasi: gunakan ${count} Ramuan Bangunan.`, kind: 'info' });
+                            window.setTimeout(() => setNotification(null), 8000);
+                          return;
+                        }
+                          setConfirmRamuanB(false);
+                          if (confirmRamuanBTimeout.current) { window.clearTimeout(confirmRamuanBTimeout.current); confirmRamuanBTimeout.current = null; }
+                          const perMs = 9 * 3600_000; // 9 hours
+                          const reduction = (accounts.find((a) => a.id === activeFilter)?.ramuanB ?? 0) * perMs;
+                          const nowLocal = Date.now();
+                          const targets = timers.filter((t) => t.accountId === activeFilter && t.type === 'Bangunan' && t.status !== 'done' && t.finishAt > nowLocal);
+                          let updated = 0;
+                          const details: Array<{ id: string; name: string; reducedMs: number; before: number; after: number }> = [];
+                          const updates: Array<{ id: string; patch: Partial<UpgradeTimer> }> = [];
+                          targets.forEach((t) => {
+                            const newFinish = Math.max(nowLocal, t.finishAt - reduction);
+                            const reduced = Math.max(0, t.finishAt - newFinish);
+                            updates.push({ id: t.id, patch: { finishAt: newFinish } });
+                            updated += 1;
+                            details.push({ id: t.id, name: t.name, reducedMs: reduced, before: t.finishAt, after: newFinish });
+                          });
+                          if (updates.length > 0) updateTimersBulk(updates);
+                          setNotification({ message: `Ramuan Bangunan diterapkan pada ${updated} timer.`, kind: 'success', details });
+                          window.setTimeout(() => setNotification(null), 8000);
+                      }}
+                      className="p-2 rounded-md"
+                        style={{ 
+                              border: (hoveredIcon === 'B' || confirmRamuanB) ? '1px solid transparent' : '1px solid var(--border)', 
+                              background: (hoveredIcon === 'B' || confirmRamuanB) ? 'rgba(28, 189, 253, 0.2)' : 'transparent', 
+                              color: '#249adf', 
+                              transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
+                            }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-house-plus-icon lucide-house-plus"><path d="M12.35 21H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v2.35"/><path d="M14.8 12.4A1 1 0 0 0 14 12h-4a1 1 0 0 0-1 1v8"/><path d="M15 18h6"/><path d="M18 15v6"/></svg>
+                    </button>
+
+                    <button
+                      title="Gunakan Ramuan Lab"
+                      onMouseEnter={() => setHoveredIcon('L')}
+                      onMouseLeave={() => setHoveredIcon(null)}
+                      onClick={() => {
+                        const acc = accounts.find((a) => a.id === activeFilter);
+                        const count = acc?.ramuanL ?? 0;
+                        if (!count || count <= 0) {
+                          setNotification({ message: 'Tidak ada Ramuan Lab di pengaturan akun ini.', kind: 'error' });
+                          window.setTimeout(() => setNotification(null), 8000);
+                          return;
+                        }
+                        if (!confirmRamuanL) {
+                          setConfirmRamuanL(true);
+                          if (confirmRamuanLTimeout.current) window.clearTimeout(confirmRamuanLTimeout.current);
+                          confirmRamuanLTimeout.current = window.setTimeout(() => setConfirmRamuanL(false), 8000);
+                          setNotification({ message: `Klik lagi untuk konfirmasi: gunakan ${count} Ramuan Lab.`, kind: 'info' });
+                          window.setTimeout(() => setNotification(null), 8000);
+                          return;
+                        }
+
+                        setConfirmRamuanL(false);
+                        if (confirmRamuanLTimeout.current) { window.clearTimeout(confirmRamuanLTimeout.current); confirmRamuanLTimeout.current = null; }
+                        const perMs = 23 * 3600_000; // 23 hours
+                        const reduction = (accounts.find((a) => a.id === activeFilter)?.ramuanL ?? 0) * perMs;
+                        const nowLocal = Date.now();
+                        const targets = timers.filter((t) => t.accountId === activeFilter && t.type === 'Lab' && t.status !== 'done' && t.finishAt > nowLocal && !isPetName(t.name));
+                        let updated = 0;
+                        const detailsL: Array<{ id: string; name: string; reducedMs: number; before: number; after: number }> = [];
+                        const updates: Array<{ id: string; patch: Partial<UpgradeTimer> }> = [];
+                        targets.forEach((t) => {
+                          const newFinish = Math.max(nowLocal, t.finishAt - reduction);
+                          const reduced = Math.max(0, t.finishAt - newFinish);
+                          updates.push({ id: t.id, patch: { finishAt: newFinish } });
+                          updated += 1;
+                          detailsL.push({ id: t.id, name: t.name, reducedMs: reduced, before: t.finishAt, after: newFinish });
+                        });
+                        if (updates.length > 0) updateTimersBulk(updates);
+                        setNotification({ message: `Ramuan Lab diterapkan pada ${updated} timer.`, kind: 'success', details: detailsL });
+                        window.setTimeout(() => setNotification(null), 8000);
+                      }}
+                      className="p-2 rounded-md"
+                      style={{ 
+                              border: (hoveredIcon === 'L' || confirmRamuanL) ? '1px solid transparent' : '1px solid var(--border)', 
+                              background: (hoveredIcon === 'L' || confirmRamuanL) ? 'rgba(165, 23, 106, 0.2)' : 'transparent', 
+                              color: '#7a0b55',
+                              transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
+                            }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flask-conical-icon lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
+                    </button>
+                  </div>
+
+                  <button
+                    className={`text-xs btn-danger-soft px-3 py-1.5 rounded-lg ${armedActive ? 'btn-danger-soft-armed' : ''}`}
+                    onClick={() => {
+                      if (!armedActive) {
+                        setArmedActive(true);
+                        if (armedActiveTimeout.current) window.clearTimeout(armedActiveTimeout.current);
+                        armedActiveTimeout.current = window.setTimeout(() => setArmedActive(false), 5000);
+                        return;
+                      }
+                      removeActiveForAccount(activeFilter);
+                      setArmedActive(false);
+                      if (armedActiveTimeout.current) {
+                        window.clearTimeout(armedActiveTimeout.current);
+                        armedActiveTimeout.current = null;
+                      }
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    <span>Hapus semua</span>
+                  </button>
+                </div>
             )}
           </div>
           <div className="flex flex-col gap-2">
@@ -221,6 +358,7 @@ export default function TimerContent() {
           </p>
         </div>
       )}
+    </div>
     </div>
   );
 }

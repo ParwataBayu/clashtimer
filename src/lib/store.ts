@@ -202,9 +202,32 @@ export function useCOCStore() {
     setEditingId((cur) => (cur === id ? null : cur));
   }, [timers, persistTimers, scheduleTimer]);
 
+  const updateTimersBulk = useCallback((updates: Array<{ id: string; patch: Partial<UpgradeTimer> }>) => {
+    // apply all updates atomically based on latest timers state
+    const next = timers.map((t) => {
+      const u = updates.find((x) => x.id === t.id);
+      return u ? { ...t, ...u.patch } : t;
+    });
+    persistTimers(next);
+
+    // reschedule any updated timers
+    updates.forEach((u) => {
+      const updated = next.find((t) => t.id === u.id);
+      if (updated && updated.status !== 'done') scheduleTimer(updated);
+    });
+  }, [timers, persistTimers, scheduleTimer]);
+
   const addAccount = useCallback(
     (account: Account) => {
       persistAccounts([...accounts, account]);
+    },
+    [accounts, persistAccounts]
+  );
+
+  const updateAccount = useCallback(
+    (id: string, patch: Partial<Account>) => {
+      const next = accounts.map((a) => (a.id === id ? { ...a, ...patch } : a));
+      persistAccounts(next);
     },
     [accounts, persistAccounts]
   );
@@ -358,11 +381,13 @@ export function useCOCStore() {
     startEditing: (id: string) => setEditingId(id),
     stopEditing: () => setEditingId(null),
     addAccount,
+    updateAccount,
     removeAccount,
     addTimers,
     removeTimer,
     markTimerDone,
     updateTimer,
+    updateTimersBulk,
     removeAllDone,
     removeAllForAccount,
     removeActiveForAccount,

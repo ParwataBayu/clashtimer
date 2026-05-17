@@ -272,6 +272,19 @@ export function getPetName(dataId: number): string {
   );
 }
 
+const PET_NAME_SET: Set<string> = new Set(Object.values(FALLBACK_PET_NAMES).map((v) => v.toLowerCase()));
+
+export function isPetName(name: string | undefined | null): boolean {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  if (PET_NAME_SET.has(n)) return true;
+  // also check if any fallback pet name is contained within the name
+  for (const p of PET_NAME_SET) {
+    if (n.includes(p)) return true;
+  }
+  return false;
+}
+
 export function getEquipmentName(dataId: number): string {
   return (
     resolveNameFromMaps(dataId, ID_TO_NAME, EQUIPMENT_FALLBACK) ?? `Equipment #${dataId}`

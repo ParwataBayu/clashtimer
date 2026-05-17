@@ -7,6 +7,10 @@ export interface Account {
   name: string;
   thLevel: number;
   dotColor: string;
+  buildermultiplier?: number;
+  labmultiplier?: number;
+  ramuanB?: number;
+  ramuanL?: number;
 }
 
 export interface UpgradeTimer {

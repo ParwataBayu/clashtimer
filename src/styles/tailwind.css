@@ -239,6 +239,38 @@
     border: none;
   }
 
+  /* speed button: smaller icon used for Tukang/Lab speed action */
+  .speed-btn {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.06);
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+
+  .speed-btn:hover,
+  .speed-btn:active,
+  .speed-btn.icon-armed {
+    background-color: rgba(34,197,94,0.12);
+    color: #22c55e;
+    border-color: rgba(34,197,94,0.2);
+  }
+
+  /* make sure speed buttons override the generic .icon-btn hover styles */
+  .icon-btn.speed-btn:hover,
+  .icon-btn.speed-btn:active,
+  .icon-btn.speed-btn.icon-armed {
+    background-color: rgba(34,197,94,0.12);
+    color: #22c55e;
+    border-color: rgba(34,197,94,0.2);
+  }
+
   .icon-btn:hover {
     background-color: #3a3d4a;
     color: var(--foreground);

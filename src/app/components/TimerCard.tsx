@@ -58,6 +58,8 @@ function ClockIcon({ className, style }: { className?: string; style?: React.CSS
 
 export default function TimerCard({ timer, onDelete }: TimerCardProps) {
   const { accounts, updateTimer, editingId, startEditing, stopEditing } = useStore();
+  const [hoverTukang, setHoverTukang] = useState(false);
+  const [hoverLab, setHoverLab] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [editName, setEditName] = useState(timer.name);
@@ -107,6 +109,10 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
   };
 
   const isEditing = editingId === timer.id;
+  const [armedTukang, setArmedTukang] = useState(false);
+  const [armedLab, setArmedLab] = useState(false);
+  const armedTukangTimeout = React.useRef<number | null>(null);
+  const armedLabTimeout = React.useRef<number | null>(null);
 
   return (
     <div
@@ -120,21 +126,29 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           {/* Badges Row */}
-          <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-            <span className="badge-account flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: account?.dotColor ?? 'var(--primary)' }} />
-              <span style={{ color: account?.dotColor ?? 'var(--primary)', fontWeight: 600 }}>{timer.accountName}</span>
-            </span>
-            <span className="badge-type">{timer.type}</span>
+          <div className="flex items-center justify-between mb-2 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="badge-account flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: account?.dotColor ?? 'var(--primary)' }} />
+                <span style={{ color: account?.dotColor ?? 'var(--primary)', fontWeight: 600 }}>{timer.accountName}</span>
+              </span>
+              <span className="badge-type">{timer.type}</span>
+
+              {/* Tukang/Lab icons moved to the time row for better alignment */}
+            </div>
           </div>
 
           {/* Building Name */}
-          <p
-            className="font-bold text-base leading-tight mb-2"
-            style={{ color: 'var(--foreground)' }}
-          >
-            {timer.name}
-          </p>
+          <div className="flex items-center justify-between mb-2">
+            <p
+              className="font-bold text-base leading-tight truncate"
+              style={{ color: 'var(--foreground)', marginRight: 8 }}
+            >
+              {timer.name}
+            </p>
+
+            {/* no duplicate icons here; icons shown next to category */}
+          </div>
 
           {/* Time Chips or Done (or inline editor when editing) */}
 
@@ -254,6 +268,9 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
           ) : (
             <div className="flex items-center gap-1.5 flex-wrap">
               <ClockIcon className="w-3.5 h-3.5" style={{ color: chipColor ?? 'var(--primary)' } as React.CSSProperties} />
+
+              {/* Tukang/Lab icons: removed duplicate left icons; using single icon after seconds */}
+
               {days > 0 && (
                 <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{days}h</span>
               )}
@@ -262,6 +279,75 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
               )}
               <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{pad(minutes)}m</span>
               <span className="time-chip" style={{ color: chipColor, backgroundColor: chipBg }}>{pad(seconds)}d</span>
+
+              {/* Tukang/Lab small icons: positioned after the seconds chip with slightly smaller size */}
+              {!isDone && !timer.name.toLowerCase().includes('pet') && (
+                <div className="flex items-center gap-1 ml-2">
+                  {timer.type === 'Bangunan' && (
+                    <div className="flex items-center gap-1">
+                      <button
+                          className={`icon-btn speed-btn ${armedTukang ? 'icon-armed' : ''}`}
+                        aria-label={armedTukang ? 'Konfirmasi Tukang' : 'Tukang Magang'}
+                        onClick={() => {
+                          if (!armedTukang) {
+                            setArmedTukang(true);
+                            if (armedTukangTimeout.current) window.clearTimeout(armedTukangTimeout.current);
+                            armedTukangTimeout.current = window.setTimeout(() => setArmedTukang(false), 5000) as unknown as number;
+                            return;
+                          }
+                          const mul = account?.buildermultiplier ?? 1;
+                          const savedHours = Math.max(0, (mul ?? 1) - 1);
+                          if (savedHours <= 0) return;
+                          const reduction = savedHours * 60 * 60 * 1000;
+                          const newFinish = timer.finishAt - reduction;
+                          const newStatus: UpgradeTimer['status'] = newFinish <= Date.now() ? 'done' : 'active';
+                          updateTimer?.(timer.id, { finishAt: Math.max(Date.now(), newFinish), status: newStatus });
+                          setArmedTukang(false);
+                          if (armedTukangTimeout.current) { window.clearTimeout(armedTukangTimeout.current); armedTukangTimeout.current = null; }
+                        }}
+                        style={{ width: 23.5, height: 23.7, padding: 0, borderRadius: 6, border: '1px solid rgba(0,0,0,0.06)' }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z" />
+                          <path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {timer.type === 'Lab' && (
+                    <div className="flex items-center gap-1">
+                      <button
+                          className={`icon-btn speed-btn ${armedLab ? 'icon-armed' : ''}`}
+                        aria-label={armedLab ? 'Konfirmasi Lab' : 'Lab Asisten'}
+                        onClick={() => {
+                          if (!armedLab) {
+                            setArmedLab(true);
+                            if (armedLabTimeout.current) window.clearTimeout(armedLabTimeout.current);
+                            armedLabTimeout.current = window.setTimeout(() => setArmedLab(false), 5000) as unknown as number;
+                            return;
+                          }
+                          const mul = account?.labmultiplier ?? 2;
+                          const savedHours = Math.max(0, (mul ?? 2) - 1);
+                          if (savedHours <= 0) return;
+                          const reduction = savedHours * 60 * 60 * 1000;
+                          const newFinish = timer.finishAt - reduction;
+                          const newStatus: UpgradeTimer['status'] = newFinish <= Date.now() ? 'done' : 'active';
+                          updateTimer?.(timer.id, { finishAt: Math.max(Date.now(), newFinish), status: newStatus });
+                          setArmedLab(false);
+                          if (armedLabTimeout.current) { window.clearTimeout(armedLabTimeout.current); armedLabTimeout.current = null; }
+                        }}
+                        style={{ width: 23.5, height: 23.7, padding: 0, borderRadius: 6, border: '1px solid rgba(0,0,0,0.06)' }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 12 18z" />
+                          <path d="M2 6a2 2 0 0 1 3.414-1.414l6 6a2 2 0 0 1 0 2.828l-6 6A2 2 0 0 1 2 18z" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

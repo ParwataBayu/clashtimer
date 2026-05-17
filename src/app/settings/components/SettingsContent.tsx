@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useStore } from '@/components/AppShell';
 
 const TELEGRAM_TOKEN_KEY = 'coc_telegram_bot_token';
 const TELEGRAM_CHAT_ID_KEY = 'coc_telegram_chat_id';
@@ -23,6 +24,7 @@ function saveSetting(key: string, value: string): void {
 }
 
 export default function SettingsContent() {
+  const { accounts, updateAccount } = useStore();
   const [botToken, setBotToken] = useState('');
   const [chatId, setChatId] = useState('');
   const [saved, setSaved] = useState(false);
@@ -74,6 +76,186 @@ export default function SettingsContent() {
   };
 
   const hasConfig = botToken.trim().length > 0 && chatId.trim().length > 0;
+  const [showMultipliers, setShowMultipliers] = useState(false);
+  const [showRamuan, setShowRamuan] = useState(false);
+
+  function AccountMultiplierRow({ account, onUpdate }: { account: any; onUpdate: (id: string, patch: any) => void }) {
+    const [builder, setBuilder] = useState<number>(account.buildermultiplier ?? 1);
+    const [lab, setLab] = useState<number>(account.labmultiplier ?? 2);
+    const [savedLocal, setSavedLocal] = useState(false);
+    const [open, setOpen] = useState(false);
+
+    return (
+      <div className="w-full rounded-lg" style={{ border: '1px solid var(--border)' }}>
+        <div
+          role="button"
+          tabIndex={0}
+          className="w-full flex items-center gap-3 p-3"
+          onClick={() => setOpen((s) => !s)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((s) => !s); } }}
+          style={{ background: 'transparent', textAlign: 'left', cursor: 'pointer' }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: account.dotColor ?? 'var(--primary)' }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{account.name}</div>
+          </div>
+          <div>
+            <div
+              role="button"
+              tabIndex={0}
+              className="p-2 rounded-md"
+              style={{ border: '1px solid var(--border)', background: 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              onClick={(e) => { e.stopPropagation(); setOpen((s) => !s); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setOpen((s) => !s); } }}
+              aria-label={open ? 'Sembunyikan' : 'Tampilkan'}
+            >
+              {open ? (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {open && (
+          <div className="p-3 pt-0">
+            <div style={{ marginLeft: 24 }}>
+              <div className="flex items-center gap-6 mb-2">
+                <div className="text-xs flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
+                  <span>Tukang</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>x{builder}</span>
+                </div>
+
+                <div className="text-xs flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
+                  <span>Lab</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>x{lab}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div>
+                  <input type="number" min={1} className="input-field" style={{ width: 72, height: 40 }} value={builder} onChange={(e) => setBuilder(Math.max(1, Number(e.target.value) || 1))} />
+                </div>
+
+                <div>
+                  <input type="number" min={2} className="input-field" style={{ width: 72, height: 40 }} value={lab} onChange={(e) => setLab(Math.max(2, Number(e.target.value) || 2))} />
+                </div>
+
+                <div>
+                  <button
+                    className="btn-primary px-3 py-1.5 rounded-lg"
+                    style={{ height: 40 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (typeof onUpdate === 'function') onUpdate(account.id, { buildermultiplier: builder, labmultiplier: lab });
+                      setSavedLocal(true);
+                      setTimeout(() => setSavedLocal(false), 2000);
+                    }}
+                  >
+                    {savedLocal ? 'Tersimpan' : 'Simpan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  function AccountRamuanRow({ account, onUpdate }: { account: any; onUpdate: (id: string, patch: any) => void }) {
+    const [ramB, setRamB] = useState<number>(account.ramuanB ?? 0);
+    const [ramL, setRamL] = useState<number>(account.ramuanL ?? 0);
+    const [savedLocal, setSavedLocal] = useState(false);
+    const [open, setOpen] = useState(false);
+
+    return (
+      <div className="w-full rounded-lg" style={{ border: '1px solid var(--border)' }}>
+        <div
+          role="button"
+          tabIndex={0}
+          className="w-full flex items-center gap-3 p-3"
+          onClick={() => setOpen((s) => !s)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpen((s) => !s); } }}
+          style={{ background: 'transparent', textAlign: 'left', cursor: 'pointer' }}
+        >
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: account.dotColor ?? 'var(--primary)' }} />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{account.name}</div>
+          </div>
+          <div>
+            <div
+              role="button"
+              tabIndex={0}
+              className="p-2 rounded-md"
+              style={{ border: '1px solid var(--border)', background: 'transparent', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              onClick={(e) => { e.stopPropagation(); setOpen((s) => !s); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setOpen((s) => !s); } }}
+              aria-label={open ? 'Sembunyikan' : 'Tampilkan'}
+            >
+              {open ? (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="18 15 12 9 6 15" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {open && (
+          <div className="p-3 pt-0">
+            <div style={{ marginLeft: 24 }}>
+              <div className="flex items-center gap-6 mb-2">
+                <div className="text-xs flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
+                  <span>Bangunan</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>{ramB}</span>
+                </div>
+
+                <div className="text-xs flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
+                  <span>Lab</span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--foreground)' }}>{ramL}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div>
+                  <input type="number" min={0} className="input-field" style={{ width: 72, height: 40 }} value={ramB} onChange={(e) => setRamB(Math.max(0, Number(e.target.value) || 0))} />
+                </div>
+
+                <div>
+                  <input type="number" min={0} className="input-field" style={{ width: 72, height: 40 }} value={ramL} onChange={(e) => setRamL(Math.max(0, Number(e.target.value) || 0))} />
+                </div>
+
+                <div>
+                  <button
+                    className="btn-primary px-3 py-1.5 rounded-lg"
+                    style={{ height: 40 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (typeof onUpdate === 'function') onUpdate(account.id, { ramuanB: ramB, ramuanL: ramL });
+                      setSavedLocal(true);
+                      setTimeout(() => setSavedLocal(false), 2000);
+                    }}
+                  >
+                    {savedLocal ? 'Tersimpan' : 'Simpan'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">
@@ -96,6 +278,74 @@ export default function SettingsContent() {
         <h2 className="text-base font-bold" style={{ color: 'var(--foreground)' }}>
           Pengaturan
         </h2>
+      </div>
+
+      {/* Account-specific multipliers (collapsible, responsive) */}
+      <div
+        className="rounded-xl p-4 mb-4"
+        style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+              Tukang Magang & Asisten Lab
+            </h3>
+            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              Atur Working Speed tiap akun
+            </p>
+          </div>
+          <div>
+            <button
+              className="px-3 py-1.5 rounded-lg"
+              onClick={() => setShowMultipliers((s) => !s)}
+              style={{ border: '1px solid var(--border)', background: 'var(--card)' }}
+            >
+              {showMultipliers ? 'Sembunyikan' : 'Tampilkan'}
+            </button>
+          </div>
+        </div>
+
+        {showMultipliers && (
+          <div className="space-y-3">
+            {accounts.map((acc) => (
+              <AccountMultiplierRow key={acc.id} account={acc} onUpdate={updateAccount} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Ramuan Section */}
+      <div
+        className="rounded-xl p-4 mb-4"
+        style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>
+              Ramuan Bangunan dan Lab
+            </h3>
+            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              Atur jumlah ramuan Bangunan dan Lab tiap akun
+            </p>
+          </div>
+          <div>
+            <button
+              className="px-3 py-1.5 rounded-lg"
+              onClick={() => setShowRamuan((s) => !s)}
+              style={{ border: '1px solid var(--border)', background: 'var(--card)' }}
+            >
+              {showRamuan ? 'Sembunyikan' : 'Tampilkan'}
+            </button>
+          </div>
+        </div>
+
+        {showRamuan && (
+          <div className="space-y-3">
+            {accounts.map((acc) => (
+              <AccountRamuanRow key={acc.id} account={acc} onUpdate={updateAccount} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Telegram Section */}
