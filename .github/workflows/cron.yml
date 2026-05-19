@@ -1,0 +1,22 @@
+name: Scheduled Cron Ping
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # every 15 minutes; adjust as needed
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call cron endpoint
+        env:
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+          CRON_API_KEY: ${{ secrets.CRON_API_KEY }}
+        run: |
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "Error: set the DEPLOY_URL secret to your deployment base URL (e.g. https://myapp.example.com)";
+            exit 1;
+          fi
+          echo "Pinging $DEPLOY_URL/api/cron/check-timers"
+          curl -sSf -H "Authorization: Bearer $CRON_API_KEY" "$DEPLOY_URL/api/cron/check-timers" || (echo "Request failed" && exit 1)
