@@ -3,10 +3,13 @@ import mapping from './cocMapping.json';
 
 type MappingItem = { name: string; dataId: number };
 
-const ID_TO_NAME: Record<number, string> = (mapping as MappingItem[]).reduce((acc, it) => {
-  acc[it.dataId] = it.name;
-  return acc;
-}, {} as Record<number, string>);
+const ID_TO_NAME: Record<number, string> = (mapping as MappingItem[]).reduce(
+  (acc, it) => {
+    acc[it.dataId] = it.name;
+    return acc;
+  },
+  {} as Record<number, string>
+);
 
 // Some mapping files include placeholder entries like "String" for certain IDs.
 // Provide small fallbacks for hero and pet IDs to avoid showing "String" in the UI.
@@ -232,7 +235,10 @@ const TRAP_FALLBACK: Record<number, string> = {
 export function getTrapName(dataId: number): string {
   return resolveNameFromMaps(dataId, ID_TO_NAME, TRAP_FALLBACK) ?? `Trap #${dataId}`;
 }
-function resolveNameFromMaps(dataId: number, ...maps: Array<Record<number, string>>): string | undefined {
+function resolveNameFromMaps(
+  dataId: number,
+  ...maps: Array<Record<number, string>>
+): string | undefined {
   const strId = String(dataId);
   // direct lookup
   for (const m of maps) {
@@ -255,24 +261,20 @@ function resolveNameFromMaps(dataId: number, ...maps: Array<Record<number, strin
 }
 
 export function getUnitName(dataId: number): string {
-  return (
-    resolveNameFromMaps(dataId, ID_TO_NAME, UNIT_FALLBACK) ?? `Pasukan #${dataId}`
-  );
+  return resolveNameFromMaps(dataId, ID_TO_NAME, UNIT_FALLBACK) ?? `Pasukan #${dataId}`;
 }
 
 export function getSpellName(dataId: number): string {
-  return (
-    resolveNameFromMaps(dataId, ID_TO_NAME, SPELL_FALLBACK) ?? `Mantra #${dataId}`
-  );
+  return resolveNameFromMaps(dataId, ID_TO_NAME, SPELL_FALLBACK) ?? `Mantra #${dataId}`;
 }
 
 export function getPetName(dataId: number): string {
-  return (
-    resolveNameFromMaps(dataId, ID_TO_NAME, FALLBACK_PET_NAMES) ?? `Pet #${dataId}`
-  );
+  return resolveNameFromMaps(dataId, ID_TO_NAME, FALLBACK_PET_NAMES) ?? `Pet #${dataId}`;
 }
 
-const PET_NAME_SET: Set<string> = new Set(Object.values(FALLBACK_PET_NAMES).map((v) => v.toLowerCase()));
+const PET_NAME_SET: Set<string> = new Set(
+  Object.values(FALLBACK_PET_NAMES).map((v) => v.toLowerCase())
+);
 
 export function isPetName(name: string | undefined | null): boolean {
   if (!name) return false;
@@ -286,7 +288,5 @@ export function isPetName(name: string | undefined | null): boolean {
 }
 
 export function getEquipmentName(dataId: number): string {
-  return (
-    resolveNameFromMaps(dataId, ID_TO_NAME, EQUIPMENT_FALLBACK) ?? `Equipment #${dataId}`
-  );
+  return resolveNameFromMaps(dataId, ID_TO_NAME, EQUIPMENT_FALLBACK) ?? `Equipment #${dataId}`;
 }
