@@ -296,7 +296,7 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
                             return;
                           }
                           const mul = account?.buildermultiplier ?? 1;
-                          const savedHours = Math.max(0, (mul ?? 1) - 1);
+                          const savedHours = Math.max(0, (mul ?? 1) - 0);
                           if (savedHours <= 0) return;
                           const reduction = savedHours * 60 * 60 * 1000;
                           const newFinish = timer.finishAt - reduction;
@@ -328,7 +328,7 @@ export default function TimerCard({ timer, onDelete }: TimerCardProps) {
                             return;
                           }
                           const mul = account?.labmultiplier ?? 2;
-                          const savedHours = Math.max(0, (mul ?? 2) - 1);
+                          const savedHours = Math.max(0, (mul ?? 2) - 0);
                           if (savedHours <= 0) return;
                           const reduction = savedHours * 60 * 60 * 1000;
                           const newFinish = timer.finishAt - reduction;
