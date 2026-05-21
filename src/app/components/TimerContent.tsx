@@ -17,6 +17,10 @@ export default function TimerContent() {
   const [confirmRamuanL, setConfirmRamuanL] = useState(false);
   const confirmRamuanBTimeout = useRef<number | null>(null);
   const confirmRamuanLTimeout = useRef<number | null>(null);
+  const [showRamuanBNotice, setShowRamuanBNotice] = useState(false);
+  const [showRamuanLNotice, setShowRamuanLNotice] = useState(false);
+  const ramuanBNoticeTimeout = useRef<number | null>(null);
+  const ramuanLNoticeTimeout = useRef<number | null>(null);
   const [hoveredIcon, setHoveredIcon] = useState<'B' | 'L' | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
@@ -52,6 +56,10 @@ export default function TimerContent() {
     return () => {
       if (armedActiveTimeout.current) window.clearTimeout(armedActiveTimeout.current);
       if (armedDoneTimeout.current) window.clearTimeout(armedDoneTimeout.current);
+      if (confirmRamuanBTimeout.current) window.clearTimeout(confirmRamuanBTimeout.current);
+      if (confirmRamuanLTimeout.current) window.clearTimeout(confirmRamuanLTimeout.current);
+      if (ramuanBNoticeTimeout.current) window.clearTimeout(ramuanBNoticeTimeout.current);
+      if (ramuanLNoticeTimeout.current) window.clearTimeout(ramuanLNoticeTimeout.current);
     };
   }, []);
 
@@ -139,6 +147,24 @@ export default function TimerContent() {
 
   return (
     <div className="animate-fade-in">
+      {notification && (
+        <div className="notification-banner mb-3" style={{ padding: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 9999, background: notification.kind === 'error' ? '#ef4444' : notification.kind === 'success' ? '#22c55e' : 'var(--primary)' }} />
+              <div className="text-sm" style={{ color: 'var(--foreground)' }}>{notification.message}</div>
+            </div>
+            <button className="icon-btn" onClick={() => setNotification(null)} aria-label="Tutup notifikasi">
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+          </div>
+          {notification.details && notification.details.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <small style={{ color: 'var(--muted-foreground)' }}>{notification.details.length} entry affected</small>
+            </div>
+          )}
+        </div>
+      )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div
         className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 -mx-1 px-1"
@@ -233,112 +259,109 @@ export default function TimerContent() {
               {activeFilter !== 'semua' && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button
-                      title="Gunakan Ramuan Bangunan"
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        title="Gunakan Ramuan Bangunan"
                         onMouseEnter={() => setHoveredIcon('B')}
                         onMouseLeave={() => setHoveredIcon(null)}
                         onClick={() => {
-                        const acc = accounts.find((a) => a.id === activeFilter);
-                        const count = acc?.ramuanB ?? 0;
-                        if (!count || count <= 0) {
-                            setNotification({ message: 'Tidak ada Ramuan Bangunan di pengaturan akun ini.', kind: 'error' });
-                            window.setTimeout(() => setNotification(null), 8000);
-                          return;
-                        }
-                        if (!confirmRamuanB) {
-                          setConfirmRamuanB(true);
+                          const acc = accounts.find((a) => a.id === activeFilter);
+                          const count = acc?.ramuanB ?? 0;
+                          if (!count || count <= 0) {
+                            setShowRamuanBNotice(true);
+                            if (ramuanBNoticeTimeout.current) window.clearTimeout(ramuanBNoticeTimeout.current);
+                            // show for 3s
+                            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                            ramuanBNoticeTimeout.current = window.setTimeout(() => setShowRamuanBNotice(false), 3000) as unknown as number;
+                            return;
+                          }
+                          if (!confirmRamuanB) {
+                            setConfirmRamuanB(true);
                             if (confirmRamuanBTimeout.current) window.clearTimeout(confirmRamuanBTimeout.current);
-                            confirmRamuanBTimeout.current = window.setTimeout(() => setConfirmRamuanB(false), 8000);
-                            setNotification({ message: `Klik lagi untuk konfirmasi: gunakan ${count} Ramuan Bangunan.`, kind: 'info' });
-                            window.setTimeout(() => setNotification(null), 8000);
-                          return;
-                        }
+                            confirmRamuanBTimeout.current = window.setTimeout(() => setConfirmRamuanB(false), 8000) as unknown as number;
+                            return;
+                          }
                           setConfirmRamuanB(false);
                           if (confirmRamuanBTimeout.current) { window.clearTimeout(confirmRamuanBTimeout.current); confirmRamuanBTimeout.current = null; }
-                          const perMs = 9 * 3600_000; // 9 hours
-                          const reduction = (accounts.find((a) => a.id === activeFilter)?.ramuanB ?? 0) * perMs;
                           const nowLocal = Date.now();
+                          const multiplier = 10 * (accounts.find((a) => a.id === activeFilter)?.ramuanB ?? 0);
                           const targets = timers.filter((t) => t.accountId === activeFilter && t.type === 'Bangunan' && t.status !== 'done' && t.finishAt > nowLocal);
-                          let updated = 0;
-                          const details: Array<{ id: string; name: string; reducedMs: number; before: number; after: number }> = [];
                           const updates: Array<{ id: string; patch: Partial<UpgradeTimer> }> = [];
                           targets.forEach((t) => {
-                            const newFinish = Math.max(nowLocal, t.finishAt - reduction);
-                            const reduced = Math.max(0, t.finishAt - newFinish);
-                            updates.push({ id: t.id, patch: { finishAt: newFinish } });
-                            updated += 1;
-                            details.push({ id: t.id, name: t.name, reducedMs: reduced, before: t.finishAt, after: newFinish });
+                            // Apply ramuanBangunan so it stacks with any existing Tukang/Lab boosts
+                            updates.push({ id: t.id, patch: { ramuanBangunanSpeedBoostStartTime: nowLocal, ramuanBangunanSpeedBoostMultiplier: multiplier } });
                           });
                           if (updates.length > 0) updateTimersBulk(updates);
-                          setNotification({ message: `Ramuan Bangunan diterapkan pada ${updated} timer.`, kind: 'success', details });
                           // consume ramuan from account (use all configured ramuan)
                           updateAccount(activeFilter, { ramuanB: 0 });
-                          window.setTimeout(() => setNotification(null), 8000);
-                      }}
-                      className="p-2 rounded-md"
+                        }}
+                        className="p-2 rounded-md"
                         style={{ 
-                              border: (hoveredIcon === 'B' || confirmRamuanB) ? '1px solid transparent' : '1px solid var(--border)', 
-                              background: (hoveredIcon === 'B' || confirmRamuanB) ? 'rgba(28, 189, 253, 0.2)' : 'transparent', 
-                              color: '#249adf', 
-                              transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
-                            }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-house-plus-icon lucide-house-plus"><path d="M12.35 21H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v2.35"/><path d="M14.8 12.4A1 1 0 0 0 14 12h-4a1 1 0 0 0-1 1v8"/><path d="M15 18h6"/><path d="M18 15v6"/></svg>
-                    </button>
+                          border: (hoveredIcon === 'B' || confirmRamuanB) ? '1px solid transparent' : '1px solid var(--border)', 
+                          background: (hoveredIcon === 'B' || confirmRamuanB) ? 'rgba(28, 189, 253, 0.2)' : 'transparent', 
+                          color: '#249adf', 
+                          transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-house-plus-icon lucide-house-plus"><path d="M12.35 21H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v2.35"/><path d="M14.8 12.4A1 1 0 0 0 14 12h-4a1 1 0 0 0-1 1v8"/><path d="M15 18h6"/><path d="M18 15v6"/></svg>
+                      </button>
+                      {showRamuanBNotice && (
+                        <div style={{ position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)', marginBottom: 6, background: 'rgba(239,68,68,0.95)', color: '#fff', padding: '6px 8px', borderRadius: 8, fontSize: 12, whiteSpace: 'nowrap', zIndex: 60 }}>
+                          Ramuan Bangunan Kosong
+                        </div>
+                      )}
+                    </div>
 
-                    <button
-                      title="Gunakan Ramuan Lab"
-                      onMouseEnter={() => setHoveredIcon('L')}
-                      onMouseLeave={() => setHoveredIcon(null)}
-                      onClick={() => {
-                        const acc = accounts.find((a) => a.id === activeFilter);
-                        const count = acc?.ramuanL ?? 0;
-                        if (!count || count <= 0) {
-                          setNotification({ message: 'Tidak ada Ramuan Lab di pengaturan akun ini.', kind: 'error' });
-                          window.setTimeout(() => setNotification(null), 8000);
-                          return;
-                        }
-                        if (!confirmRamuanL) {
-                          setConfirmRamuanL(true);
-                          if (confirmRamuanLTimeout.current) window.clearTimeout(confirmRamuanLTimeout.current);
-                          confirmRamuanLTimeout.current = window.setTimeout(() => setConfirmRamuanL(false), 8000);
-                          setNotification({ message: `Klik lagi untuk konfirmasi: gunakan ${count} Ramuan Lab.`, kind: 'info' });
-                          window.setTimeout(() => setNotification(null), 8000);
-                          return;
-                        }
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        title="Gunakan Ramuan Lab"
+                        onMouseEnter={() => setHoveredIcon('L')}
+                        onMouseLeave={() => setHoveredIcon(null)}
+                        onClick={() => {
+                          const acc = accounts.find((a) => a.id === activeFilter);
+                          const count = acc?.ramuanL ?? 0;
+                          if (!count || count <= 0) {
+                            setShowRamuanLNotice(true);
+                            if (ramuanLNoticeTimeout.current) window.clearTimeout(ramuanLNoticeTimeout.current);
+                            ramuanLNoticeTimeout.current = window.setTimeout(() => setShowRamuanLNotice(false), 3000) as unknown as number;
+                            return;
+                          }
+                          if (!confirmRamuanL) {
+                            setConfirmRamuanL(true);
+                            if (confirmRamuanLTimeout.current) window.clearTimeout(confirmRamuanLTimeout.current);
+                            confirmRamuanLTimeout.current = window.setTimeout(() => setConfirmRamuanL(false), 8000) as unknown as number;
+                            return;
+                          }
 
-                        setConfirmRamuanL(false);
-                        if (confirmRamuanLTimeout.current) { window.clearTimeout(confirmRamuanLTimeout.current); confirmRamuanLTimeout.current = null; }
-                        const perMs = 23 * 3600_000; // 23 hours
-                        const reduction = (accounts.find((a) => a.id === activeFilter)?.ramuanL ?? 0) * perMs;
-                        const nowLocal = Date.now();
-                        const targets = timers.filter((t) => t.accountId === activeFilter && t.type === 'Lab' && t.status !== 'done' && t.finishAt > nowLocal && !isPetName(t.name));
-                        let updated = 0;
-                        const detailsL: Array<{ id: string; name: string; reducedMs: number; before: number; after: number }> = [];
-                        const updates: Array<{ id: string; patch: Partial<UpgradeTimer> }> = [];
-                        targets.forEach((t) => {
-                          const newFinish = Math.max(nowLocal, t.finishAt - reduction);
-                          const reduced = Math.max(0, t.finishAt - newFinish);
-                          updates.push({ id: t.id, patch: { finishAt: newFinish } });
-                          updated += 1;
-                          detailsL.push({ id: t.id, name: t.name, reducedMs: reduced, before: t.finishAt, after: newFinish });
-                        });
-                        if (updates.length > 0) updateTimersBulk(updates);
-                        setNotification({ message: `Ramuan Lab diterapkan pada ${updated} timer.`, kind: 'success', details: detailsL });
-                        // consume ramuan from account (use all configured ramuan)
-                        updateAccount(activeFilter, { ramuanL: 0 });
-                        window.setTimeout(() => setNotification(null), 8000);
-                      }}
-                      className="p-2 rounded-md"
-                      style={{ 
-                              border: (hoveredIcon === 'L' || confirmRamuanL) ? '1px solid transparent' : '1px solid var(--border)', 
-                              background: (hoveredIcon === 'L' || confirmRamuanL) ? 'rgba(165, 23, 106, 0.2)' : 'transparent', 
-                              color: '#7a0b55',
-                              transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
-                            }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flask-conical-icon lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
-                    </button>
+                          setConfirmRamuanL(false);
+                          if (confirmRamuanLTimeout.current) { window.clearTimeout(confirmRamuanLTimeout.current); confirmRamuanLTimeout.current = null; }
+                          const nowLocal = Date.now();
+                          const multiplier = 24 * (accounts.find((a) => a.id === activeFilter)?.ramuanL ?? 0);
+                          const targets = timers.filter((t) => t.accountId === activeFilter && t.type === 'Lab' && t.status !== 'done' && t.finishAt > nowLocal && !isPetName(t.name));
+                          const updates: Array<{ id: string; patch: Partial<UpgradeTimer> }> = [];
+                          targets.forEach((t) => {
+                            updates.push({ id: t.id, patch: { ramuanLabSpeedBoostStartTime: nowLocal, ramuanLabSpeedBoostMultiplier: multiplier } });
+                          });
+                          if (updates.length > 0) updateTimersBulk(updates);
+                          // consume ramuan from account (use all configured ramuan)
+                          updateAccount(activeFilter, { ramuanL: 0 });
+                        }}
+                        className="p-2 rounded-md"
+                        style={{ 
+                          border: (hoveredIcon === 'L' || confirmRamuanL) ? '1px solid transparent' : '1px solid var(--border)', 
+                          background: (hoveredIcon === 'L' || confirmRamuanL) ? 'rgba(165, 23, 106, 0.2)' : 'transparent', 
+                          color: '#7a0b55',
+                          transition: 'transform 120ms, color 120ms, background-color 120ms, border-color 120ms' 
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-flask-conical-icon lucide-flask-conical"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
+                      </button>
+                      {showRamuanLNotice && (
+                        <div style={{ position: 'absolute', bottom: '110%', left: '50%', transform: 'translateX(-50%)', marginBottom: 6, background: 'rgba(239,68,68,0.95)', color: '#fff', padding: '6px 8px', borderRadius: 8, fontSize: 12, whiteSpace: 'nowrap', zIndex: 60 }}>
+                          Ramuan Lab Kosong
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <button

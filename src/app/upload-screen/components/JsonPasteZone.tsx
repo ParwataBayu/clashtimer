@@ -49,9 +49,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const b of buildings) {
         if (!b.timer || b.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(b.timer);
+        const lvl = b.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getBuildingName(b.data)} Lv.${b.lvl ?? '?'}`,
+          name: `${getBuildingName(b.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -62,9 +64,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const t of traps) {
         if (!t.timer || t.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(t.timer);
+        const lvl = t.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getTrapName(t.data)} Lv.${t.lvl ?? '?'}`,
+          name: `${getTrapName(t.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -75,9 +79,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const h of heroes) {
         if (!h.timer || h.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(h.timer);
+        const lvl = h.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getHeroName(h.data)} Lv.${h.lvl ?? '?'}`,
+          name: `${getHeroName(h.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -95,9 +101,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const u of [...units, ...units2]) {
         if (!u.timer || u.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(u.timer);
+        const lvl = u.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getUnitName(u.data)} Lv.${u.lvl ?? '?'}`,
+          name: `${getUnitName(u.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -108,9 +116,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const s of spells) {
         if (!s.timer || s.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(s.timer);
+        const lvl = s.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getSpellName(s.data)} Lv.${s.lvl ?? '?'}`,
+          name: `${getSpellName(s.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -121,9 +131,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const sm of siegeMachines) {
         if (!sm.timer || sm.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(sm.timer);
+        const lvl = sm.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getUnitName(sm.data)} Lv.${sm.lvl ?? '?'}`,
+          name: `${getUnitName(sm.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,
@@ -134,9 +146,11 @@ function parseCocJson(raw: string, upgradeType: UpgradeType): ParsedItem[] {
       for (const p of pets) {
         if (!p.timer || p.timer <= 0) continue;
         const { days, hours, minutes, seconds } = secondsToComponents(p.timer);
+        const lvl = p.lvl ?? '?';
+        const nextLvl = typeof lvl === 'number' ? lvl + 1 : '?';
         results.push({
           id: `json-${Date.now()}-${idx++}`,
-          name: `${getPetName(p.data)} Lv.${p.lvl ?? '?'}`,
+          name: `${getPetName(p.data)} Lv.${lvl} ke Lv.${nextLvl}`,
           days,
           hours,
           minutes,

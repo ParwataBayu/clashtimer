@@ -22,6 +22,15 @@ export interface UpgradeTimer {
   finishAt: number; // Unix timestamp ms
   screenshotUrl?: string;
   status: UpgradeStatus;
+  speedBoostStartTime?: number; // Unix timestamp ms when speed boost was activated
+  speedBoostMultiplier?: number; // optional multiplier set per-timer (e.g. Tukang/Lab account-applied multiplier)
+  // Ramuan-specific fields (separate from account-based boosts)
+  // For Bangunan (house) ramuan
+  ramuanBangunanSpeedBoostStartTime?: number;
+  ramuanBangunanSpeedBoostMultiplier?: number;
+  // For Lab ramuan
+  ramuanLabSpeedBoostStartTime?: number;
+  ramuanLabSpeedBoostMultiplier?: number;
 }
 
 export interface ParsedItem {
