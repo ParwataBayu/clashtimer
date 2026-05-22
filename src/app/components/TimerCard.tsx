@@ -83,15 +83,15 @@ export default function TimerCard({ timer, onDelete, notify }: TimerCardProps) {
       let accountActiveMul = 0;
       let accountElapsed = 0;
       if (timer.speedBoostStartTime) {
-        const elapsedA = Math.min(ONE_HOUR, Math.max(0, now - timer.speedBoostStartTime));
         const accMulValue = timer.speedBoostMultiplier && timer.speedBoostMultiplier > 1
           ? timer.speedBoostMultiplier
           : timer.type === 'Bangunan'
             ? account?.buildermultiplier ?? 1
             : account?.labmultiplier ?? 2;
+        const elapsedA = Math.min(ONE_HOUR, Math.max(0, now - timer.speedBoostStartTime));
         accountActiveMul = accMulValue;
         accountElapsed = elapsedA;
-        displayRemaining -= elapsedA * (accMulValue - 1);
+        displayRemaining -= elapsedA * accMulValue; // Time reduction = elapsed * multiplier
 
         if (now - (timer.speedBoostStartTime ?? 0) >= ONE_HOUR) {
           const newFinishAt = now + displayRemaining;
@@ -109,7 +109,7 @@ export default function TimerCard({ timer, onDelete, notify }: TimerCardProps) {
           const rMul = timer.ramuanBangunanSpeedBoostMultiplier;
           ramuanActiveMul = rMul;
           ramuanElapsed = elapsedR;
-          displayRemaining -= elapsedR * (rMul - 1);
+          displayRemaining -= elapsedR * rMul; // Time reduction = elapsed * multiplier
 
           if (now - (timer.ramuanBangunanSpeedBoostStartTime ?? 0) >= ONE_HOUR) {
             const newFinishAt = now + displayRemaining;
@@ -122,7 +122,7 @@ export default function TimerCard({ timer, onDelete, notify }: TimerCardProps) {
           const elapsedR = Math.min(ONE_HOUR, Math.max(0, now - timer.ramuanLabSpeedBoostStartTime));
           const rMul = timer.ramuanLabSpeedBoostMultiplier;
           ramuanActiveMul = rMul;
-          displayRemaining -= elapsedR * (rMul - 1);
+          displayRemaining -= elapsedR * rMul; // Time reduction = elapsed * multiplier
 
           if (now - (timer.ramuanLabSpeedBoostStartTime ?? 0) >= ONE_HOUR) {
             const newFinishAt = now + displayRemaining;
