@@ -268,6 +268,10 @@ export default function TimerContent() {
                           const acc = accounts.find((a) => a.id === activeFilter);
                           const count = acc?.ramuanB ?? 0;
                           if (!count || count <= 0) {
+                            // Clear the Lab notice if it's showing
+                            if (ramuanLNoticeTimeout.current) window.clearTimeout(ramuanLNoticeTimeout.current);
+                            setShowRamuanLNotice(false);
+                            
                             setShowRamuanBNotice(true);
                             if (ramuanBNoticeTimeout.current) window.clearTimeout(ramuanBNoticeTimeout.current);
                             // show for 3s
@@ -321,6 +325,10 @@ export default function TimerContent() {
                           const acc = accounts.find((a) => a.id === activeFilter);
                           const count = acc?.ramuanL ?? 0;
                           if (!count || count <= 0) {
+                            // Clear the Bangunan notice if it's showing
+                            if (ramuanBNoticeTimeout.current) window.clearTimeout(ramuanBNoticeTimeout.current);
+                            setShowRamuanBNotice(false);
+                            
                             setShowRamuanLNotice(true);
                             if (ramuanLNoticeTimeout.current) window.clearTimeout(ramuanLNoticeTimeout.current);
                             ramuanLNoticeTimeout.current = window.setTimeout(() => setShowRamuanLNotice(false), 3000) as unknown as number;

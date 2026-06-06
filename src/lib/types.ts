@@ -40,4 +40,5 @@ export interface ParsedItem {
   hours: number;
   minutes: number;
   seconds: number;
+  type?: UpgradeType; // Optional: set when auto-detected from JSON
 }

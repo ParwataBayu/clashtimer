@@ -7,6 +7,7 @@ interface OcrDropzoneProps {
   onParsed: (items: ParsedItem[]) => void;
   disabled?: boolean;
   upgradeType: UpgradeType;
+  onBeforeProcess?: (callback: (selectedType: UpgradeType) => void) => void;
 }
 
 async function fileToBase64DataUri(file: File): Promise<string> {
@@ -111,7 +112,7 @@ Lightning Spell: 6h 45m 20s`;
   return parseGeminiResponse(content);
 }
 
-export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDropzoneProps) {
+export default function OcrDropzone({ onParsed, disabled, upgradeType, onBeforeProcess }: OcrDropzoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -120,9 +121,10 @@ export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDrop
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropzoneId = useId();
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const processFiles = useCallback(
-    async (files: File[]) => {
+    async (files: File[], finalUpgradeType: UpgradeType = upgradeType) => {
       if (files.length === 0) return;
       setIsProcessing(true);
       setError(null);
@@ -148,6 +150,7 @@ export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDrop
                 hours: upgrade.hours,
                 minutes: upgrade.minutes,
                 seconds: upgrade.seconds,
+                type: finalUpgradeType,
               });
             }
           } else {
@@ -162,6 +165,7 @@ export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDrop
             hours: 0,
             minutes: 0,
             seconds: 0,
+            type: finalUpgradeType,
           });
         }
 
@@ -186,18 +190,37 @@ export default function OcrDropzone({ onParsed, disabled, upgradeType }: OcrDrop
       const files = Array.from(e.dataTransfer.files).filter((f) =>
         f.type.startsWith('image/')
       );
-      processFiles(files);
+      
+      if (onBeforeProcess) {
+        setPendingFiles(files);
+        onBeforeProcess((selectedType) => {
+          processFiles(files, selectedType);
+          setPendingFiles([]);
+        });
+      } else {
+        processFiles(files);
+      }
     },
-    [disabled, processFiles]
+    [disabled, processFiles, onBeforeProcess]
   );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
-      processFiles(files);
+      
+      if (onBeforeProcess) {
+        setPendingFiles(files);
+        onBeforeProcess((selectedType) => {
+          processFiles(files, selectedType);
+          setPendingFiles([]);
+        });
+      } else {
+        processFiles(files);
+      }
+      
       if (inputRef.current) inputRef.current.value = '';
     },
-    [processFiles]
+    [processFiles, onBeforeProcess]
   );
 
   return (
