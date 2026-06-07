@@ -16,6 +16,7 @@ export default function UploadContent() {
   const { accounts, addTimers } = useStore();
   const [upgradeType, setUpgradeType] = useState<UpgradeType>('Bangunan');
   const [sourceType, setSourceType] = useState<'ocr' | 'json' | null>(null); // Track source type
+  const [activeTab, setActiveTab] = useState<'json' | 'ocr'>('json'); // Active upload tab
   const [parsedItems, setParsedItems] = useState<ParsedItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -45,6 +46,16 @@ export default function UploadContent() {
     // Determine source type: if items have type field (auto-detected), it's from JSON
     const isFromJson = items.length > 0 && items[0].type !== undefined;
     setSourceType(isFromJson ? 'json' : 'ocr');
+  }, []);
+
+  // Handle tab change - reset parsed items when switching between JSON and OCR
+  const handleTabChange = useCallback((tab: 'json' | 'ocr') => {
+    setActiveTab(tab);
+    setParsedItems([]);
+    setEditedItems([]);
+    setCheckedIds(new Set());
+    setSourceType(null);
+    setSaveSuccess(false);
   }, []);
 
   // Handle OCR type selection from modal
@@ -194,30 +205,55 @@ export default function UploadContent() {
         )}
       </div>
 
-      {/* JSON Paste Zone - MOVED TO TOP */}
-      <div className="mb-6">
-        <JsonPasteZone
-          onParsed={handleParsed}
-          disabled={!selectedAccountId}
-        />
+      {/* Upload Tabs Toggle */}
+      <div className="flex gap-2 mb-6">
+        <button
+          type="button"
+          onClick={() => handleTabChange('json')}
+          className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
+          style={{
+            backgroundColor: activeTab === 'json' ? 'var(--primary)' : 'var(--muted)',
+            color: activeTab === 'json' ? 'var(--primary-foreground)' : 'var(--muted-foreground)',
+            border: activeTab === 'json' ? 'none' : '1px solid var(--border)',
+          }}
+        >
+          Paste Code JSON
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTabChange('ocr')}
+          className="flex-1 px-4 py-2.5 rounded-lg font-medium text-sm transition-all"
+          style={{
+            backgroundColor: activeTab === 'ocr' ? 'var(--primary)' : 'var(--muted)',
+            color: activeTab === 'ocr' ? 'var(--primary-foreground)' : 'var(--muted-foreground)',
+            border: activeTab === 'ocr' ? 'none' : '1px solid var(--border)',
+          }}
+        >
+          Upload Screenshot
+        </button>
       </div>
 
-      {/* Divider */}
-      <div
-        style={{
-          height: '1px',
-          background: 'var(--border)',
-          margin: '2rem 0',
-        }}
-      />
+      {/* JSON Input Zone - Only visible when JSON tab is active */}
+      {activeTab === 'json' && (
+        <div className="mb-6 animate-slide-up">
+          <JsonPasteZone
+            onParsed={handleParsed}
+            disabled={!selectedAccountId}
+          />
+        </div>
+      )}
 
-      {/* OCR Screenshot Dropzone */}
-      <OcrDropzone
-        onParsed={handleParsed}
-        disabled={!selectedAccountId}
-        upgradeType={upgradeType}
-        onBeforeProcess={handleBeforeOcrProcess}
-      />
+      {/* OCR Input Zone - Only visible when OCR tab is active */}
+      {activeTab === 'ocr' && (
+        <div className="mb-6 animate-slide-up">
+          <OcrDropzone
+            onParsed={handleParsed}
+            disabled={!selectedAccountId}
+            upgradeType={upgradeType}
+            onBeforeProcess={handleBeforeOcrProcess}
+          />
+        </div>
+      )}
 
       {/* Type Selection Modal for OCR */}
       {showTypeModal && (

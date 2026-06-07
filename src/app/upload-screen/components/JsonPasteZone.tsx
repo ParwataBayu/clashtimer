@@ -172,7 +172,7 @@ function parseCocJsonAuto(raw: string): ParsedItem[] {
 
 export default function JsonPasteZone({ onParsed, disabled }: JsonPasteZoneProps) {
   const [jsonText, setJsonText] = useState('');
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const handleParse = useCallback(() => {
@@ -225,38 +225,27 @@ export default function JsonPasteZone({ onParsed, disabled }: JsonPasteZoneProps
       className="rounded-xl p-4 animate-slide-up"
       style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
           Paste JSON COC
         </p>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setExpanded(false);
-              setError(null);
-              setJsonText('');
-            }}
-            className="icon-btn w-6 h-6"
-            style={{ width: 24, height: 24, minWidth: 24 }}
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
       </div>
 
       <textarea
         className="input-field font-mono text-xs"
-        style={{ minHeight: 140, resize: 'vertical', fontFamily: 'monospace' }}
+        style={{ 
+          minHeight: 140, 
+          resize: 'vertical', 
+          fontFamily: 'monospace',
+          opacity: disabled ? 0.5 : 1,
+        }}
         placeholder='Paste JSON COC di sini... (format: {"buildings":[...],"heroes":[...],"units":[...],...})'
         value={jsonText}
         onChange={(e) => {
           setJsonText(e.target.value);
           setError(null);
         }}
+        disabled={disabled}
       />
 
       {error && (
@@ -272,7 +261,7 @@ export default function JsonPasteZone({ onParsed, disabled }: JsonPasteZoneProps
       <button
         type="button"
         onClick={handleParse}
-        disabled={!jsonText.trim()}
+        disabled={!jsonText.trim() || disabled}
         className="btn-primary w-full"
       >
         Parse JSON
